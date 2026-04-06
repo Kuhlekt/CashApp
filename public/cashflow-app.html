@@ -5798,7 +5798,7 @@ function clRender() {
   var c = document.getElementById('cl-messages')
   if (!c) return
   if (!CL_MSGS.length) {
-    c.innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">🤖</div><div class="cl-empty-title">Ask Claude anything</div><div style="font-size:11px;color:var(--text3);margin-bottom:10px">Cash application · AR · Bank formats · Automation · ERP</div><div class="cl-suggestions"><button class="cl-sug" onclick="clSuggest(this)">How do I configure SFTP file pickup?</button><button class="cl-sug" onclick="clSuggest(this)">Explain MT940 bank file format</button><button class="cl-sug" onclick="clSuggest(this)">How does ML matching learn from allocations?</button><button class="cl-sug" onclick="clSuggest(this)">Set up ClickSend email notifications</button><button class="cl-sug" onclick="clSuggest(this)">Walk me through deploying to Vercel</button></div></div>'
+    c.innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">🤖</div><div class="cl-empty-title">Ask Claude anything</div><div style="font-size:10px;color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 8px;margin-bottom:8px">⚠ Requires a local server. Run: <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">npx serve .</code> in the app folder, then open http://localhost:3000/cashflow-app.html</div><div style="font-size:11px;color:var(--text3);margin-bottom:10px">Cash application · AR · Bank formats · Automation · ERP</div><div class="cl-suggestions"><button class="cl-sug" onclick="clSuggest(this)">How do I configure SFTP file pickup?</button><button class="cl-sug" onclick="clSuggest(this)">Explain MT940 bank file format</button><button class="cl-sug" onclick="clSuggest(this)">How does ML matching learn from allocations?</button><button class="cl-sug" onclick="clSuggest(this)">Set up ClickSend email notifications</button><button class="cl-sug" onclick="clSuggest(this)">Walk me through deploying to Vercel</button></div></div>'
     return
   }
   c.innerHTML = CL_MSGS.map(function(m) {
@@ -5833,14 +5833,58 @@ async function clSend() {
     .map(function(m) { return { role: m.role === 'user' ? 'user' : 'assistant', content: m.text } })
 
   try {
-    // Get API key from localStorage or prompt
+    // Use /api/claude when served from a real server (Vercel, Next.js)
+    // Only use direct Anthropic API when opened as a local file
+    var isLocalFile = window.location.protocol === 'file:'
+
+    if (!isLocalFile) {
+      // Server mode - key is server-side, just call the API route
+      var res = await fetch('/api/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages, stream: true })
+      })
+
+      if (!res.ok) {
+        var errText = await res.text().catch(function() { return '' })
+        var errMsg = 'Server error ' + res.status
+        try { errMsg = JSON.parse(errText).error || errMsg } catch(e) {}
+        CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
+        CL_MSGS.push({ role: 'assistant', text: '⚠ ' + errMsg })
+        clRender(); CL_BUSY = false; return
+      }
+
+      var reader = res.body.getReader()
+      var decoder = new TextDecoder()
+      var fullText = ''
+      CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
+      CL_MSGS.push({ role: 'assistant', text: '' })
+      while (true) {
+        var chunk = await reader.read()
+        if (chunk.done) break
+        var lines = decoder.decode(chunk.value, { stream: true }).split('\n')
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i].startsWith('data: ')) continue
+          var data = lines[i].slice(6).trim()
+          if (data === '[DONE]') continue
+          try {
+            var parsed = JSON.parse(data)
+            var txt = parsed.text || ''
+            if (txt) { fullText += txt; CL_MSGS[CL_MSGS.length-1].text = fullText; clRender() }
+          } catch(e) {}
+        }
+      }
+      clRender(); CL_BUSY = false; return
+    }
+
+    // Local file mode - use direct Anthropic API
     var apiKey = ''
     try { apiKey = localStorage.getItem('cl_key') || '' } catch(e) {}
     if (!apiKey) {
       apiKey = prompt('Enter your Anthropic API key (sk-ant-...):') || ''
       if (!apiKey) {
         CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
-        CL_MSGS.push({ role: 'assistant', text: 'No API key provided. Enter your Anthropic key to use Claude.' })
+        CL_MSGS.push({ role: 'assistant', text: 'No API key. Open via a server or enter your key.' })
         clRender(); CL_BUSY = false; return
       }
       try { localStorage.setItem('cl_key', apiKey) } catch(e) {}
@@ -5909,7 +5953,11 @@ async function clSend() {
 
   } catch(err) {
     CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
-    CL_MSGS.push({ role: 'assistant', text: '⚠ ' + (err.message || 'Network error') + ' — is npm run dev running?' })
+    var isFile = window.location.protocol === 'file:'
+    var errMsg = isFile 
+      ? '⚠ Chrome blocks API calls from local files. Two options:\n\n1. Serve via a local server:\n   In PowerShell: npx serve . then open http://localhost:3000\n\n2. Enable in Chrome: start Chrome with --disable-web-security flag'
+      : '⚠ ' + (err.message || 'Network error')
+    CL_MSGS.push({ role: 'assistant', text: errMsg })
   }
 
   clRender()
@@ -6253,7 +6301,7 @@ function renderDashboard(){
   <div class="cl-messages" id="cl-messages">
     <div class="cl-empty">
       <div class="cl-empty-icon">🤖</div>
-      <div class="cl-empty-title">Ask Claude anything</div>
+      <div class="cl-empty-title">Ask Claude anything</div><div style="font-size:10px;color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 8px;margin-bottom:8px">⚠ Requires a local server. Run: <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">npx serve .</code> in the app folder, then open http://localhost:3000/cashflow-app.html</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Cash application · Bank formats · Automation · ERP · Deployment</div>
       <div class="cl-suggestions">
         <button class="cl-sug" onclick="clSuggest(this)">How do I configure SFTP file pickup?</button>
