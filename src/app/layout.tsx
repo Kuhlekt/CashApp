@@ -1,28 +1,10 @@
-// src/lib/db/client.ts
-// Neon PostgreSQL via Prisma — singleton pattern for Next.js
-// Prevents connection pool exhaustion during hot reloads
-
-import { PrismaClient } from '@prisma/client'
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+export const metadata = { title: 'CashFlow AI' }
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body style={{ margin:0, padding:0, background:'#020817', color:'#e2e8f0', fontFamily:'system-ui,sans-serif' }}>
+        {children}
+      </body>
+    </html>
+  )
 }
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development'
-      ? ['query', 'error', 'warn']
-      : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
-  })
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
-}
-
-export default prisma
