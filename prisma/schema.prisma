@@ -1,291 +1,107 @@
 // prisma/schema.prisma
-// CashFlow Platform — Neon PostgreSQL via Prisma ORM
-// Deploy: npx prisma migrate deploy
+// CashFlow Platform — Full SaaS Schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // DIRECT_URL: set this in production (Neon pooled vs direct)
-  // For local dev, leave unset — DATABASE_URL is used for everything
-  // directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// ─── TENANTS / ORGANISATIONS ─────────────────────────────────────────────────
+// ─── ORGANISATIONS ────────────────────────────────────────────────────────────
 model Org {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  plan        String   @default("starter")  // starter | professional | enterprise
-  status      String   @default("trial")
-  mrr         Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  plan            String    @default("trial")    // trial | starter | professional | enterprise
+  status          String    @default("trial")    // trial | active | suspended | cancelled
+  mrr             Int       @default(0)
+  trialEndsAt     DateTime?
+  stripeCustomerId String?  @unique
+  stripeSubId     String?   @unique
+  maxUsers        Int       @default(5)
+  maxBatches      Int       @default(100)
+  settings        Json?                          // org-level config overrides
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  users       User[]
-  sessions    BatchSession[]
-  accounts    Account[]
-  openItems   OpenItem[]
-  bankFiles   BankFile[]
-  allocations Allocation[]
-  auditLogs   AuditLog[]
-  automationCfg AutomationConfig?
-  notifCfg    NotificationConfig?
-  govRules    GovRules?
-  regions     Region[]
-  mlHistory   MLRecord[]
-  onAccount   OnAccountItem[]
-  reasonCodes ReasonCode[]
-  erpExports  ErpExport[]
+  users           User[]
+  invites         Invite[]
+  sessions        BatchSession[]
+  accounts        Account[]
+  openItems       OpenItem[]
+  bankFiles       BankFile[]
+  allocations     Allocation[]
+  allocationLines AllocationLine[]
+  onAccountItems  OnAccountItem[]
+  reasonCodes     ReasonCode[]
+  auditLogs       AuditLog[]
+  automationConfig AutomationConfig?
+  regions         Region[]
+  automationRuns  AutomationRun[]
+  mlRecords       MLRecord[]
+  govRules        GovRules?
+  notifConfig     NotificationConfig?
+  erpExports      ErpExport[]
+
+  @@index([slug])
+  @@index([status])
 }
 
-// ─── USERS ───────────────────────────────────────────────────────────────────
+// ─── USERS ────────────────────────────────────────────────────────────────────
 model User {
-  id          String   @id @default(cuid())
-  orgId       String
-  email       String   @unique
-  name        String
-  initials    String   @default("")
-  role        String   @default("accountant")  // accountant | controller | admin | superadmin
-  level       String   @default("L2")          // L1-L4
-  status      String   @default("active")
-  passwordHash String?
-  totpSecret  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(cuid())
+  orgId           String
+  email           String    @unique
+  name            String
+  initials        String    @default("")
+  phone           String?
+  role            String    @default("accountant") // accountant | controller | admin | superadmin
+  level           String    @default("L2")         // L1 | L2 | L3 | L4
+  status          String    @default("active")     // active | suspended | invited | pending
+  passwordHash    String?
+  totpSecret      String?
+  totpEnabled     Boolean   @default(false)
+  resetToken      String?   @unique
+  resetTokenExpiry DateTime?
+  lastLoginAt     DateTime?
+  lastLoginIp     String?
+  loginCount      Int       @default(0)
+  failedLogins    Int       @default(0)
+  lockedUntil     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  auditLogs   AuditLog[]
-  allocations Allocation[]
+  org             Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  auditLogs       AuditLog[]
+  allocations     Allocation[]
+  sentInvites     Invite[]  @relation("InvitedBy")
 
   @@index([orgId])
   @@index([email])
+  @@index([resetToken])
 }
 
-// ─── BATCH SESSIONS ───────────────────────────────────────────────────────────
-model BatchSession {
-  id           String   @id @default(cuid())
-  orgId        String
-  sessionRef   String   @unique  // e.g. SESS-20240220-A3F9
-  status       String   @default("open")  // open | running | suspended | complete | archived
-  trigger      String   @default("manual")  // manual | scheduled | api
-  startedAt    DateTime @default(now())
-  completedAt  DateTime?
-  suspendedAt  DateTime?
-  suspendReason String?
-  totalRecords Int      @default(0)
-  totalValue   Decimal  @default(0) @db.Decimal(18,2)
-  matched      Int      @default(0)
-  exceptions   Int      @default(0)
-  matchRate    Decimal  @default(0) @db.Decimal(5,2)
-  userId       String?
-  metadata     Json?
+// ─── INVITES ──────────────────────────────────────────────────────────────────
+model Invite {
+  id          String    @id @default(cuid())
+  orgId       String
+  email       String
+  role        String    @default("accountant")
+  token       String    @unique @default(cuid())
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
-  org          Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  bankFiles    BankFile[]
-  allocations  Allocation[]
-  auditLogs    AuditLog[]
-  erpExports   ErpExport[]
-
-  @@index([orgId, status])
-  @@index([orgId, startedAt])
-}
-
-// ─── ACCOUNTS / DEBTORS ───────────────────────────────────────────────────────
-model Account {
-  id            String   @id @default(cuid())
-  orgId         String
-  code          String                   // customer_code e.g. ACME001
-  name          String
-  email         String?
-  phone         String?
-  terms         String   @default("NET30")
-  erpId         String?                  // ERP system reference
-  industry      String?
-  regionCode    String?
-  currency      String   @default("AUD")
-  creditLimit   Decimal? @db.Decimal(18,2)
-  status        String   @default("active")
-  source        String   @default("manual")  // manual | api | csv | sftp | s3
-  syncedAt      DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  openItems     OpenItem[]
-
-  @@unique([orgId, code])
-  @@index([orgId])
-  @@index([orgId, regionCode])
-}
-
-// ─── OPEN ITEMS / INVOICES ────────────────────────────────────────────────────
-model OpenItem {
-  id                String   @id @default(cuid())
-  orgId             String
-  accountId         String?
-  customerCode      String
-  invoiceNumber     String
-  invoiceDate       DateTime?
-  dueDate           DateTime?
-  invoiceAmount     Decimal  @db.Decimal(18,2)
-  outstandingAmount Decimal  @db.Decimal(18,2)
-  currency          String   @default("AUD")
-  regionCode        String?
-  erpRef            String?
-  status            String   @default("open")  // open | partial | cleared
-  source            String   @default("manual")
-  syncedAt          DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  org               Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  account           Account? @relation(fields: [accountId], references: [id])
-  allocations       AllocationLine[]
-
-  @@unique([orgId, invoiceNumber])
-  @@index([orgId, customerCode])
-  @@index([orgId, status])
-  @@index([orgId, dueDate])
-}
-
-// ─── BANK FILES ───────────────────────────────────────────────────────────────
-model BankFile {
-  id           String   @id @default(cuid())
-  orgId        String
-  sessionId    String?
-  filename     String
-  format       String   @default("MT940")   // MT940 | CAMT053 | ISO20022 | BAI2 | CSV
-  sizeBytes    Int      @default(0)
-  sha256Hash   String
-  sourceType   String   @default("manual")  // manual | url | sftp | s3
-  sourceUrl    String?
-  recordCount  Int      @default(0)
-  controlSum   Decimal  @default(0) @db.Decimal(18,2)
-  currency     String   @default("AUD")
-  bankAccount  String?
-  regionCode   String?
-  processedAt  DateTime?
-  createdAt    DateTime @default(now())
-
-  org          Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  session      BatchSession? @relation(fields: [sessionId], references: [id])
-  transactions BankTransaction[]
+  org         Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invitedBy   User      @relation("InvitedBy", fields: [invitedById], references: [id])
 
   @@index([orgId])
-  @@index([orgId, sessionId])
-}
-
-// ─── BANK TRANSACTIONS ────────────────────────────────────────────────────────
-model BankTransaction {
-  id            String   @id @default(cuid())
-  bankFileId    String
-  orgId         String
-  txnRef        String
-  payer         String
-  amount        Decimal  @db.Decimal(18,2)
-  currency      String   @default("AUD")
-  txnDate       DateTime
-  valueDate     DateTime?
-  narrative     String?
-  regionCode    String?
-  matchStatus   String   @default("unmatched")  // unmatched | matched | exception | on-account
-  matchMethod   String?   // historical | ml | ai | manual
-  matchConfidence Decimal? @db.Decimal(5,4)
-  createdAt     DateTime @default(now())
-
-  bankFile      BankFile    @relation(fields: [bankFileId], references: [id], onDelete: Cascade)
-  allocation    Allocation?
-
-  @@index([bankFileId])
-  @@index([orgId, matchStatus])
-}
-
-// ─── ALLOCATIONS ──────────────────────────────────────────────────────────────
-model Allocation {
-  id            String   @id @default(cuid())
-  orgId         String
-  sessionId     String?
-  txnId         String   @unique
-  userId        String?
-  status        String   @default("confirmed")  // pending | confirmed | approved | posted | rejected
-  totalAllocated Decimal @db.Decimal(18,2)
-  variance      Decimal  @default(0) @db.Decimal(18,2)
-  varianceCode  String?
-  varianceNotes String?
-  aiConfidence  Decimal? @db.Decimal(5,4)
-  matchMethod   String   @default("manual")
-  notes         String?
-  approvedBy    String?
-  approvedAt    DateTime?
-  postedToErp   Boolean  @default(false)
-  postedAt      DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  org           Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  session       BatchSession? @relation(fields: [sessionId], references: [id])
-  txn           BankTransaction @relation(fields: [txnId], references: [id])
-  user          User?        @relation(fields: [userId], references: [id])
-  lines         AllocationLine[]
-
-  @@index([orgId, status])
-  @@index([orgId, sessionId])
-}
-
-model AllocationLine {
-  id            String   @id @default(cuid())
-  allocationId  String
-  openItemId    String
-  amount        Decimal  @db.Decimal(18,2)
-  createdAt     DateTime @default(now())
-
-  allocation    Allocation @relation(fields: [allocationId], references: [id], onDelete: Cascade)
-  openItem      OpenItem   @relation(fields: [openItemId], references: [id])
-
-  @@index([allocationId])
-}
-
-// ─── ON ACCOUNT ITEMS ─────────────────────────────────────────────────────────
-model OnAccountItem {
-  id            String   @id @default(cuid())
-  orgId         String
-  customerCode  String
-  payer         String
-  amount        Decimal  @db.Decimal(18,2)
-  currency      String   @default("AUD")
-  shortcode     String
-  reasonCode    String
-  reasonLabel   String
-  reasonText    String?
-  txnRef        String?
-  status        String   @default("on-account")  // on-account | allocated | written-off
-  agingDays     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-
-  @@index([orgId, status])
-}
-
-// ─── REASON CODES ─────────────────────────────────────────────────────────────
-model ReasonCode {
-  id       String @id @default(cuid())
-  orgId    String
-  code     String
-  label    String
-  type     String  // variance | on-account
-  active   Boolean @default(true)
-  createdAt DateTime @default(now())
-
-  org      Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
-
-  @@unique([orgId, code, type])
-  @@index([orgId])
+  @@index([token])
+  @@index([email])
 }
 
 // ─── AUDIT LOG ────────────────────────────────────────────────────────────────
@@ -294,21 +110,254 @@ model AuditLog {
   orgId       String
   sessionId   String?
   userId      String?
-  category    String   // user | system | approve
-  event       String   // BATCH_START | ALLOCATION_CONFIRMED | etc.
+  category    String   // system | user | approve | security | api
+  event       String
   message     String
   actor       String
-  chainHash   String   @default("")  // tamper-evident chaining
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+  extra       Json?
+  prevHash    String   @default("0000000000000000")
+  hash        String
+  timestamp   DateTime @default(now())
 
-  org         Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  session     BatchSession? @relation(fields: [sessionId], references: [id])
-  user        User?        @relation(fields: [userId], references: [id])
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([orgId, createdAt])
-  @@index([orgId, sessionId])
-  @@index([orgId, event])
+  @@index([orgId, timestamp(sort: Desc)])
+  @@index([orgId, category])
+  @@index([sessionId])
+  @@index([userId])
+}
+
+// ─── BATCH SESSIONS ───────────────────────────────────────────────────────────
+model BatchSession {
+  id            String    @id @default(cuid())
+  orgId         String
+  sessionRef    String    @unique
+  status        String    @default("open")   // open | running | suspended | complete | archived
+  trigger       String    @default("manual") // manual | scheduled | api
+  userId        String?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  suspendedAt   DateTime?
+  suspendReason String?
+  recordCount   Int       @default(0)
+  matchedCount  Int       @default(0)
+  exceptionCount Int      @default(0)
+  totalValue    Decimal   @default(0) @db.Decimal(18, 2)
+  region        String?
+  meta          Json?
+
+  org           Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  allocations   Allocation[]
+
+  @@index([orgId, status])
+  @@index([orgId, startedAt(sort: Desc)])
+}
+
+// ─── ACCOUNTS (DEBTORS) ───────────────────────────────────────────────────────
+model Account {
+  id              String   @id @default(cuid())
+  orgId           String
+  accountNumber   String
+  name            String
+  tradingName     String?
+  abn             String?
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  country         String   @default("AU")
+  postcode        String?
+  creditLimit     Decimal? @db.Decimal(18, 2)
+  paymentTerms    Int      @default(30)
+  currency        String   @default("AUD")
+  region          String?
+  status          String   @default("active")
+  sourceType      String   @default("manual")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  org             Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  openItems       OpenItem[]
+  allocations     Allocation[]
+
+  @@unique([orgId, accountNumber])
+  @@index([orgId])
+  @@index([orgId, name])
+}
+
+// ─── OPEN ITEMS (INVOICES) ────────────────────────────────────────────────────
+model OpenItem {
+  id                String   @id @default(cuid())
+  orgId             String
+  accountId         String?
+  invoiceNumber     String
+  accountNumber     String?
+  customerName      String?
+  invoiceDate       DateTime?
+  dueDate           DateTime?
+  originalAmount    Decimal  @db.Decimal(18, 2)
+  outstandingAmount Decimal  @db.Decimal(18, 2)
+  currency          String   @default("AUD")
+  region            String?
+  status            String   @default("open") // open | partial | paid | disputed | written-off
+  reference         String?
+  poNumber          String?
+  sourceType        String   @default("manual")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  org               Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  account           Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  allocationLines   AllocationLine[]
+
+  @@index([orgId, status])
+  @@index([orgId, accountNumber])
+  @@index([orgId, invoiceNumber])
+}
+
+// ─── BANK FILES ───────────────────────────────────────────────────────────────
+model BankFile {
+  id           String   @id @default(cuid())
+  orgId        String
+  filename     String
+  format       String   // mt940 | camt053 | bai2 | csv
+  fileHash     String
+  recordCount  Int      @default(0)
+  totalCredits Decimal  @default(0) @db.Decimal(18, 2)
+  currency     String   @default("AUD")
+  region       String?
+  processedAt  DateTime @default(now())
+  sourceType   String   @default("manual")
+
+  org          Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  transactions BankTransaction[]
+
+  @@index([orgId])
+  @@index([fileHash])
+}
+
+// ─── BANK TRANSACTIONS ────────────────────────────────────────────────────────
+model BankTransaction {
+  id            String   @id @default(cuid())
+  bankFileId    String
+  reference     String?
+  valueDate     DateTime?
+  amount        Decimal  @db.Decimal(18, 2)
+  currency      String   @default("AUD")
+  description   String?
+  payer         String?
+  status        String   @default("unmatched") // unmatched | matched | on-account | excluded
+  matchMethod   String?  // ml | ai | manual | rule
+  confidence    Decimal? @db.Decimal(5, 4)
+
+  bankFile      BankFile @relation(fields: [bankFileId], references: [id], onDelete: Cascade)
+  allocations   Allocation[]
+
+  @@index([bankFileId])
+  @@index([status])
+}
+
+// ─── ALLOCATIONS ──────────────────────────────────────────────────────────────
+model Allocation {
+  id              String   @id @default(cuid())
+  orgId           String
+  sessionId       String?
+  accountId       String?
+  transactionId   String?
+  matchMethod     String   @default("manual")
+  confidence      Decimal? @db.Decimal(5, 4)
+  totalAmount     Decimal  @db.Decimal(18, 2)
+  status          String   @default("pending") // pending | approved | rejected | posted
+  approvedBy      String?
+  approvedAt      DateTime?
+  postedAt        DateTime?
+  aiReasoning     String?
+  userId          String?
+  createdAt       DateTime @default(now())
+
+  org             Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  session         BatchSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  account         Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  transaction     BankTransaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lines           AllocationLine[]
+
+  @@index([orgId, status])
+  @@index([sessionId])
+  @@index([accountId])
+}
+
+// ─── ALLOCATION LINES ─────────────────────────────────────────────────────────
+model AllocationLine {
+  id            String   @id @default(cuid())
+  orgId         String
+  allocationId  String
+  openItemId    String?
+  amount        Decimal  @db.Decimal(18, 2)
+  variance      Decimal  @default(0) @db.Decimal(18, 2)
+  varianceCode  String?
+  note          String?
+
+  org           Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  allocation    Allocation @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+  openItem      OpenItem?  @relation(fields: [openItemId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([allocationId])
+}
+
+// ─── ON ACCOUNT ITEMS ─────────────────────────────────────────────────────────
+model OnAccountItem {
+  id           String   @id @default(cuid())
+  orgId        String
+  reference    String
+  payer        String?
+  amount       Decimal  @db.Decimal(18, 2)
+  currency     String   @default("AUD")
+  reasonCode   String?
+  note         String?
+  status       String   @default("open") // open | matched | written-off
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  org          Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, status])
+}
+
+// ─── REASON CODES ─────────────────────────────────────────────────────────────
+model ReasonCode {
+  id      String @id @default(cuid())
+  orgId   String
+  code    String
+  label   String
+  type    String // variance | on-account
+
+  org     Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, code, type])
+  @@index([orgId])
+}
+
+// ─── GOVERNANCE RULES ─────────────────────────────────────────────────────────
+model GovRules {
+  id              String  @id @default(cuid())
+  orgId           String  @unique
+  minConfidence   Int     @default(85)
+  requireApproval Decimal @default(50000) @db.Decimal(18, 2)
+  dualApproval    Boolean @default(true)
+  hashVerify      Boolean @default(true)
+  autoArchive     Boolean @default(true)
+  retentionDays   Int     @default(2555)
+  flagPartial     Boolean @default(true)
+  maxExceptionAge Int     @default(5)
+  erpApproval     Boolean @default(true)
+
+  org             Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
 // ─── AUTOMATION CONFIG ────────────────────────────────────────────────────────
@@ -316,58 +365,24 @@ model AutomationConfig {
   id                String   @id @default(cuid())
   orgId             String   @unique
   enabled           Boolean  @default(false)
-  frequency         String   @default("daily")    // daily | weekly | weekdays | custom
+  frequency         String   @default("daily")
   runTime           String   @default("06:00")
   timezone          String   @default("Australia/Sydney")
-  cronExpression    String?
-  batchOpenAction   String   @default("suspend")  // suspend | clear | skip | complete
+  batchOpenAction   String   @default("suspend")
   timeoutMin        Int      @default(30)
-  alertOnSkip       Boolean  @default(true)
-  pickupOffsetMin   Int      @default(15)
-  retryEnabled      Boolean  @default(true)
-  retryCount        Int      @default(3)
-  retryIntervalMin  Int      @default(5)
-
-  // Banking source
-  bankSrcType       String   @default("url")
-  bankSrcUrl        String?
-  bankSrcAuth       String   @default("bearer")
-  bankSrcFormat     String   @default("auto")
-  bankSrcPattern    String?
-  bankSrcPath       String?
-  bankSrcUser       String?
-  // bank token stored encrypted in env / secrets manager
-
-  // Debtor source
-  debtorSrcType     String   @default("url")
-  debtorSrcUrl      String?
-  debtorSrcAuth     String   @default("bearer")
-  debtorSrcFormat   String   @default("json")
-  debtorSrcRefresh  String   @default("full")
-  debtorSrcPath     String?
-
-  // Output
-  outputFormat      String   @default("sap-idoc")
-  outputFilename    String   @default("CASHAPP_{date}_{region}_{seq}.txt")
-  outputDestType    String   @default("url")
-  outputDestUrl     String?
-  outputDestUser    String?
-  outputLocalCopy   Boolean  @default(true)
-
-  // ML / AI
-  mlAutoThresh      Decimal  @default(0.92) @db.Decimal(4,3)
-  mlAiThresh        Decimal  @default(0.75) @db.Decimal(4,3)
+  mlAutoThresh      Decimal  @default(0.92) @db.Decimal(5, 4)
+  mlAiThresh        Decimal  @default(0.75) @db.Decimal(5, 4)
   aiEnabled         Boolean  @default(true)
   aiModel           String   @default("claude-sonnet-4-20250514")
   aiMaxCallsPerRun  Int      @default(200)
-
-  // Pipeline flags
   haltAtExceptions  Boolean  @default(true)
   autoApprove       Boolean  @default(false)
   autoOutput        Boolean  @default(true)
   notifyOnComplete  Boolean  @default(true)
-
-  updatedAt         DateTime @updatedAt
+  outputFormat      String   @default("sap-idoc")
+  outputFilename    String   @default("CASHAPP_{date}_{region}_{seq}.txt")
+  outputLocalCopy   Boolean  @default(true)
+  config            Json?
 
   org               Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
@@ -379,37 +394,33 @@ model Region {
   code        String
   name        String
   currency    String  @default("AUD")
-  bankFilter  String?
-  srcUrl      String?
-  refPattern  String?
+  bankAccount String?
   active      Boolean @default(true)
-  createdAt   DateTime @default(now())
 
-  org         Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  org         Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, code])
   @@index([orgId])
 }
 
-// ─── AUTOMATION RUN HISTORY ───────────────────────────────────────────────────
+// ─── AUTOMATION RUNS ──────────────────────────────────────────────────────────
 model AutomationRun {
-  id          String   @id @default(cuid())
-  orgId       String
-  runRef      String   @unique
-  trigger     String   @default("manual")
-  status      String   @default("running")  // running | complete | error | skipped
-  startedAt   DateTime @default(now())
-  completedAt DateTime?
-  durationSec Int?
-  bankFile    String?
-  matched     Int      @default(0)
-  exceptions  Int      @default(0)
-  outputFile  String?
-  regions     String[] @default([])
-  error       String?
-  metadata    Json?
+  id            String   @id @default(cuid())
+  orgId         String
+  trigger       String   @default("scheduled")
+  status        String   @default("running")
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  recordsIn     Int      @default(0)
+  matched       Int      @default(0)
+  exceptions    Int      @default(0)
+  outputFile    String?
+  error         String?
+  log           Json?
 
-  @@index([orgId, startedAt])
+  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, startedAt(sort: Desc)])
 }
 
 // ─── ML RECORDS ───────────────────────────────────────────────────────────────
@@ -417,84 +428,80 @@ model MLRecord {
   id          String   @id @default(cuid())
   orgId       String
   payer       String
-  txnRef      String?
-  amount      Decimal  @db.Decimal(18,2)
-  txnDate     DateTime?
-  invoiceNums String[] @default([])
-  matchMethod String   @default("manual")
-  confidence  Decimal? @db.Decimal(5,4)
-  runRef      String?
-  createdAt   DateTime @default(now())
+  reference   String?
+  amount      Decimal  @db.Decimal(18, 2)
+  invoiceNums String[]
+  learnedAt   DateTime @default(now())
 
-  org         Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
   @@index([orgId, payer])
 }
 
-// ─── GOVERNANCE RULES ─────────────────────────────────────────────────────────
-model GovRules {
-  id               String  @id @default(cuid())
-  orgId            String  @unique
-  minConfidence    Int     @default(85)
-  requireApproval  Decimal @default(50000) @db.Decimal(18,2)
-  dualApproval     Boolean @default(true)
-  hashVerify       Boolean @default(true)
-  autoArchive      Boolean @default(true)
-  retentionDays    Int     @default(2555)
-  flagPartial      Boolean @default(true)
-  maxExceptionAge  Int     @default(5)
-  erpApproval      Boolean @default(true)
-  updatedAt        DateTime @updatedAt
-
-  org              Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
-}
-
 // ─── NOTIFICATION CONFIG ──────────────────────────────────────────────────────
 model NotificationConfig {
-  id                  String  @id @default(cuid())
-  orgId               String  @unique
-  enabled             Boolean @default(false)
-  provider            String  @default("clicksend")  // clicksend | smtp | sendgrid
-  // ClickSend
-  clicksendUsername   String?
-  clicksendApiKey     String? // stored encrypted
-  fromEmail           String?
-  fromName            String  @default("CashFlow AI")
-  fromPhone           String?
-  recipientEmail      String?
-  recipientPhone      String?
-  // Triggers
-  onBatchComplete     Boolean @default(true)
-  onException         Boolean @default(true)
-  onApproval          Boolean @default(true)
-  onErpExport         Boolean @default(true)
-  onAgingAlert        Boolean @default(false)
-  dailySummary        Boolean @default(false)
-  updatedAt           DateTime @updatedAt
+  id              String  @id @default(cuid())
+  orgId           String  @unique
+  enabled         Boolean @default(false)
+  provider        String  @default("clicksend")
+  fromName        String  @default("CashFlow AI")
+  fromEmail       String?
+  fromPhone       String?
+  clicksendUser   String?
+  clicksendKey    String? // encrypted
+  emailAddressId  String?
+  onBatchComplete Boolean @default(true)
+  onException     Boolean @default(true)
+  onApproval      Boolean @default(true)
+  onErpExport     Boolean @default(true)
 
-  org                 Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  org             Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
-// ─── ERP EXPORTS ─────────────────────────────────────────────────────────────
+// ─── ERP EXPORTS ──────────────────────────────────────────────────────────────
 model ErpExport {
-  id          String   @id @default(cuid())
-  orgId       String
-  sessionId   String?
-  filename    String
-  format      String   @default("sap-idoc")
-  records     Int      @default(0)
-  totalValue  Decimal  @default(0) @db.Decimal(18,2)
-  status      String   @default("pending")  // pending | approved | posted | rejected
-  deliveredTo String?
-  deliveredAt DateTime?
-  approvedBy  String?
-  approvedAt  DateTime?
-  sha256Hash  String?
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  orgId        String
+  sessionId    String?
+  format       String   @default("sap-idoc")
+  filename     String
+  recordCount  Int      @default(0)
+  totalValue   Decimal  @default(0) @db.Decimal(18, 2)
+  status       String   @default("pending") // pending | approved | delivered | failed
+  approvedBy   String?
+  approvedAt   DateTime?
+  deliveredAt  DateTime?
+  error        String?
+  createdAt    DateTime @default(now())
 
-  org         Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  session     BatchSession? @relation(fields: [sessionId], references: [id])
+  org          Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId, status])
+}
+
+// ─── RATE LIMIT ───────────────────────────────────────────────────────────────
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique  // ip:endpoint or userId:endpoint
+  count     Int      @default(1)
+  windowEnd DateTime
+
+  @@index([key])
+  @@index([windowEnd])
+}
+
+// ─── WEBHOOK EVENTS ───────────────────────────────────────────────────────────
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  provider    String   // stripe | clicksend
+  eventType   String
+  payload     Json
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([provider, processed])
+  @@index([createdAt])
 }

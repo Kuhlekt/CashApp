@@ -1,43 +1,18 @@
-// src/lib/auth/config.ts
-// Simple auth — works with OR without a database
-// Hardcoded dev credentials always work for local development
+// src/lib/auth/config.ts — Production auth with lockout, DB users + hardcoded fallback
 
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 
-// ─── DEV USERS — always work locally ─────────────────────────────────────────
 const DEV_USERS = [
-  {
-    id: 'user-1',
-    email: 'admin@hindleconsultants.com.au',
-    password: 'CashFlow2024!',
-    name: 'Ian Hindle',
-    initials: 'IH',
-    orgId: 'org-1',
-    orgName: 'Hindle Consultants',
-    role: 'admin',
-    level: 'L4',
-  },
-  {
-    id: 'user-2',
-    email: 'ian@kuhlekt.com',
-    password: 'CashFlow2024!',
-    name: 'Ian Hindle',
-    initials: 'IH',
-    orgId: 'org-1',
-    orgName: 'Kuhlekt',
-    role: 'admin',
-    level: 'L4',
-  },
+  { id: 'dev-1', email: 'admin@hindleconsultants.com.au', password: 'CashFlow2024!', name: 'Ian Hindle', initials: 'IH', orgId: 'dev-org', orgName: 'Hindle Consultants', role: 'admin', level: 'L4' },
+  { id: 'dev-2', email: 'ian@kuhlekt.com', password: 'CashFlow2024!', name: 'Ian Hindle', initials: 'IH', orgId: 'dev-org', orgName: 'Kuhlekt', role: 'admin', level: 'L4' },
+  { id: 'dev-3', email: 'admin@cashflow.ai', password: 'CashFlow2024!', name: 'Super Admin', initials: 'SA', orgId: 'dev-org', orgName: 'CashFlow AI', role: 'superadmin', level: 'L4' },
 ]
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: 'jwt' },
-  secret: process.env.AUTH_SECRET ?? 'dev-secret-cashflow-2024-local-only',
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
+  session: { strategy: 'jwt', maxAge: 8 * 60 * 60 }, // 8 hour sessions
+  secret: process.env.AUTH_SECRET ?? 'dev-secret-change-in-production',
+  pages: { signIn: '/login', error: '/login' },
   providers: [
     Credentials({
       name: 'credentials',
@@ -46,46 +21,66 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const email = (credentials?.email as string ?? '').toLowerCase().trim()
-        const password = credentials?.password as string ?? ''
-
+        const email = ((credentials?.email as string) ?? '').toLowerCase().trim()
+        const password = (credentials?.password as string) ?? ''
         if (!email || !password) return null
 
-        // 1. Check hardcoded dev users first — always works
-        const devUser = DEV_USERS.find(
-          u => u.email.toLowerCase() === email && u.password === password
-        )
+        // 1. Hardcoded dev/super users — always work
+        const devUser = DEV_USERS.find(u => u.email === email && u.password === password)
         if (devUser) {
           const { password: _, ...user } = devUser
           return user
         }
 
-        // 2. Try database if DATABASE_URL is configured
-        if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('YOUR_PASSWORD')) {
+        // 2. Database users
+        if (process.env.DATABASE_URL) {
           try {
             const { default: prisma } = await import('../db/client')
             const { compare } = await import('bcryptjs')
 
             const user = await prisma.user.findUnique({
               where: { email },
-              include: { org: { select: { id: true, name: true } } },
+              include: { org: { select: { id: true, name: true, slug: true, status: true } } },
             })
 
-            if (user?.passwordHash && await compare(password, user.passwordHash)) {
-              return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                initials: user.initials,
-                orgId: user.orgId,
-                orgName: user.org.name,
-                role: user.role,
-                level: user.level,
-              }
+            if (!user?.passwordHash) return null
+            if (user.status === 'suspended') return null
+
+            // Account lockout
+            if (user.lockedUntil && user.lockedUntil > new Date()) return null
+
+            const valid = await compare(password, user.passwordHash)
+
+            if (!valid) {
+              const failedLogins = (user.failedLogins ?? 0) + 1
+              await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                  failedLogins,
+                  lockedUntil: failedLogins >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null,
+                },
+              })
+              return null
+            }
+
+            // Reset failed logins on success
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { failedLogins: 0, lockedUntil: null, lastLoginAt: new Date(), loginCount: { increment: 1 } },
+            })
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              initials: user.initials,
+              orgId: user.orgId,
+              orgName: user.org.name,
+              role: user.role,
+              level: user.level,
             }
           } catch (err) {
-            // DB failed — fall through, dev users already checked above
-            console.warn('DB auth failed, using dev users only:', (err as Error).message)
+            console.warn('DB auth error:', (err as Error).message)
           }
         }
 
@@ -97,12 +92,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         const u = user as Record<string, string>
-        token.id = u.id
-        token.orgId = u.orgId
-        token.orgName = u.orgName
-        token.role = u.role
-        token.level = u.level
-        token.initials = u.initials
+        token.id = u.id; token.orgId = u.orgId; token.orgName = u.orgName
+        token.role = u.role; token.level = u.level; token.initials = u.initials
       }
       return token
     },
@@ -119,14 +110,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 declare module 'next-auth' {
   interface Session {
-    user: {
-      id: string
-      email: string
-      name: string
-      orgId: string
-      orgName: string
-      role: string
-      level: string
-    }
+    user: { id: string; email: string; name: string; orgId: string; orgName: string; role: string; level: string }
   }
 }
