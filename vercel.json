@@ -1,0 +1,17 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/trial-expiry",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/automation/scheduled",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "functions": {
+    "src/app/api/automation/run/route.ts": { "maxDuration": 300 },
+    "src/app/api/claude/route.ts": { "maxDuration": 60 },
+    "src/app/api/export/route.ts": { "maxDuration": 60 }
+  }
+}
