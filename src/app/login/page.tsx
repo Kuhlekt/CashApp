@@ -12,10 +12,22 @@ export default function LoginPage() {
     e.preventDefault()
     if (loading) return
     setLoading(true); setError('')
+
     const result = await signIn('credentials', { email, password, redirect: false })
+
     if (result?.error || !result?.ok) {
       setError('Invalid email or password')
       setLoading(false)
+      return
+    }
+
+    // Check role from session to decide where to send them
+    const sessionRes = await fetch('/api/auth/session')
+    const session = await sessionRes.json()
+    const role = session?.user?.role ?? ''
+
+    if (role === 'superadmin') {
+      window.location.href = '/admin'
     } else {
       window.location.href = '/app'
     }
@@ -33,7 +45,9 @@ export default function LoginPage() {
         </div>
         <form onSubmit={submit}>
           <div style={{ marginBottom:12 }}>
-            <label style={{ display:'block', color:'#94a3b8', fontSize:12, marginBottom:6 }}>Email</label>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+              <label style={{ color:'#94a3b8', fontSize:12 }}>Email</label>
+            </div>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inp} placeholder="you@company.com" required autoFocus />
           </div>
           <div style={{ marginBottom:16 }}>
