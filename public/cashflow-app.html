@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!--
+  CashFlow AI — Governed Cash Application Platform
+  Copyright © 2026 Hindle Consultants Pty Ltd. All rights reserved.
+  
+  PROPRIETARY AND CONFIDENTIAL
+  This software is the exclusive property of Hindle Consultants Pty Ltd.
+  Unauthorised copying, reproduction, modification, distribution, or use
+  of this software, in whole or in part, is strictly prohibited without
+  express written permission from Hindle Consultants Pty Ltd.
+  
+  Built by Kuhlekt · Powered by Anthropic Claude AI
+  Contact: legal@hindleconsultants.com.au
+-->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -810,6 +823,9 @@ select option { background:#0D1526; color:#F0F6FF; }
 .help-footer-btns{display:flex;gap:8px;}
 .help-context-tip{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#A5B4FC;}
 .help-context-tip strong{color:#C7D2FE;}
+
+/* ── IP PROTECTION ─────────────────────────────────────────────────────────── */
+body { -webkit-user-select:none; -moz-user-select:none; user-select:none; }
 </style>
 </head>
 <body>
@@ -2240,6 +2256,53 @@ select option { background:#0D1526; color:#F0F6FF; }
 <div class="toast-container" id="tc"></div>
 
 <script>
+
+// ═══════════════════════════════════════════════════════
+//  IP PROTECTION
+// ═══════════════════════════════════════════════════════
+(function(){
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; })
+
+  // Disable common inspect shortcuts
+  document.addEventListener('keydown', function(e){
+    // F12
+    if(e.keyCode === 123) { e.preventDefault(); return false; }
+    // Ctrl+Shift+I / Cmd+Option+I (inspect)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 73 || e.key === 'I')) { e.preventDefault(); return false; }
+    // Ctrl+Shift+J (console)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 74 || e.key === 'J')) { e.preventDefault(); return false; }
+    // Ctrl+Shift+C (element picker)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 67 || e.key === 'C')) { e.preventDefault(); return false; }
+    // Ctrl+U (view source)
+    if((e.ctrlKey || e.metaKey) && (e.keyCode === 85 || e.key === 'u')) { e.preventDefault(); return false; }
+    // Ctrl+S (save)
+    if((e.ctrlKey || e.metaKey) && (e.keyCode === 83 || e.key === 's')) { e.preventDefault(); return false; }
+    // Ctrl+A (select all)
+    if((e.ctrlKey || e.metaKey) && (e.keyCode === 65 || e.key === 'a')) { e.preventDefault(); return false; }
+  })
+
+  // Detect DevTools open (size-based heuristic)
+  var threshold = 160
+  function detectDevTools(){
+    if(window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold){
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#060A14;flex-direction:column;gap:16px"><div style="font-size:36px">⬡</div><div style="color:#F8FAFF;font-size:18px;font-weight:600">CashFlow AI</div><div style="color:#64748b;font-size:14px">Developer tools are disabled for this application.</div><div style="color:#64748b;font-size:12px">© 2026 Hindle Consultants Pty Ltd · All rights reserved.</div></div>'
+    }
+  }
+  // Check periodically
+  setInterval(detectDevTools, 1000)
+
+  // Copyright watermark in console
+  setTimeout(function(){
+    try {
+      console.log('%c⬡ CashFlow AI', 'font-size:20px;font-weight:bold;color:#0EA5A0')
+      console.log('%cCopyright © 2026 Hindle Consultants Pty Ltd. All rights reserved.', 'color:#64748b;font-size:12px')
+      console.log('%cUnauthorised copying, reverse engineering or distribution of this software is strictly prohibited.', 'color:#f87171;font-size:11px')
+      console.log('%cContact: legal@hindleconsultants.com.au', 'color:#64748b;font-size:11px')
+    } catch(e){}
+  }, 500)
+})()
+
 // ═══════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════
