@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!--
+  CashFlow AI — Governed Cash Application Platform
+  Copyright © 2026 Hindle Consultants Pty Ltd. All rights reserved.
+  
+  PROPRIETARY AND CONFIDENTIAL
+  This software is the exclusive property of Hindle Consultants Pty Ltd.
+  Unauthorised copying, reproduction, modification, distribution, or use
+  of this software, in whole or in part, is strictly prohibited without
+  express written permission from Hindle Consultants Pty Ltd.
+  
+  Built by Kuhlekt · Powered by Anthropic Claude AI
+  Contact: legal@hindleconsultants.com.au
+-->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -756,6 +769,63 @@ select option { background:#0D1526; color:#F0F6FF; }
 .inp:focus { border-color:#0EA5A0 !important; box-shadow:0 0 0 2px rgba(14,165,160,0.15); }
 /* Topbar session hash */
 #topbar-session { font-size:10px !important; }
+
+/* ── HELP SYSTEM ────────────────────────────────────────────────────────────── */
+#help-panel{position:fixed;right:0;top:0;bottom:0;width:480px;background:var(--surface);border-left:2px solid var(--border);display:flex;flex-direction:column;z-index:210;transform:translateX(100%);transition:transform 0.25s ease;box-shadow:-8px 0 32px rgba(0,0,0,0.4);}
+#help-panel.open{transform:translateX(0);}
+.main.help-open{margin-right:480px;}
+.help-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);}
+.help-hdr-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#8B5CF6,#6366F1);display:flex;align-items:center;justify-content:center;color:white;font-size:15px;flex-shrink:0;}
+.help-hdr-title{font-size:14px;font-weight:700;color:var(--text1);}
+.help-hdr-sub{font-size:10px;color:var(--text3);}
+.help-close{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px 8px;line-height:1;border-radius:6px;}
+.help-close:hover{background:var(--surface2);color:var(--text1);}
+.help-search-wrap{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.help-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 12px 8px 34px;font-size:13px;color:var(--text1);outline:none;box-sizing:border-box;font-family:inherit;}
+.help-search:focus{border-color:var(--teal);}
+.help-search-wrap{position:relative;}
+.help-search-icon{position:absolute;left:24px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+.help-nav{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0;}
+.help-nav-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.14s;white-space:nowrap;}
+.help-nav-btn:hover{border-color:var(--teal);color:var(--teal-l);}
+.help-nav-btn.active{background:var(--teal-dim);border-color:var(--teal);color:var(--teal-l);font-weight:600;}
+.help-body{flex:1;overflow-y:auto;padding:16px 14px;}
+.help-body::-webkit-scrollbar{width:4px;}
+.help-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.help-section{margin-bottom:24px;}
+.help-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.help-article{background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color 0.14s;}
+.help-article:hover{border-color:var(--teal);}
+.help-article-hdr{display:flex;align-items:center;gap:10px;padding:11px 14px;}
+.help-article-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.help-article-title{font-size:13px;font-weight:500;color:var(--text1);flex:1;}
+.help-article-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;}
+.help-article-chevron{color:var(--text3);font-size:12px;transition:transform 0.18s;}
+.help-article.open .help-article-chevron{transform:rotate(90deg);}
+.help-article-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border);margin-top:0;}
+.help-article.open .help-article-body{display:block;}
+.help-article-body p{font-size:12.5px;color:var(--text2);line-height:1.7;margin:10px 0;}
+.help-article-body h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text2);margin:14px 0 6px;}
+.help-article-body ul{margin:6px 0 10px;padding-left:0;list-style:none;}
+.help-article-body ul li{font-size:12.5px;color:var(--text2);line-height:1.6;padding:2px 0;display:flex;gap:7px;}
+.help-article-body ul li::before{content:"•";color:var(--teal);flex-shrink:0;}
+.help-article-body ol{margin:6px 0 10px;padding-left:0;list-style:none;counter-reset:help-ol;}
+.help-article-body ol li{font-size:12.5px;color:var(--text2);line-height:1.6;padding:3px 0;display:flex;gap:8px;counter-increment:help-ol;}
+.help-article-body ol li::before{content:counter(help-ol);color:var(--teal);font-weight:700;font-size:11px;min-width:16px;flex-shrink:0;}
+.help-article-body .tip{background:rgba(14,165,160,0.08);border:1px solid rgba(14,165,160,0.2);border-radius:7px;padding:9px 12px;margin:10px 0;font-size:12px;color:var(--text2);line-height:1.6;}
+.help-article-body .tip::before{content:"💡 ";font-style:normal;}
+.help-article-body .warn{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:7px;padding:9px 12px;margin:10px 0;font-size:12px;color:var(--text2);}
+.help-article-body .warn::before{content:"⚠ ";}
+.help-article-body .code{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 11px;font-family:'DM Mono',monospace;font-size:11px;color:var(--teal-l);margin:8px 0;overflow-x:auto;}
+.help-article-body kbd{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text1);}
+.help-no-results{text-align:center;padding:32px 20px;color:var(--text3);font-size:13px;}
+.help-footer{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;}
+.help-footer-btns{display:flex;gap:8px;}
+.help-context-tip{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#A5B4FC;}
+.help-context-tip strong{color:#C7D2FE;}
+
+/* ── IP PROTECTION ─────────────────────────────────────────────────────────── */
+body { -webkit-user-select:none; -moz-user-select:none; user-select:none; }
 </style>
 </head>
 <body>
@@ -849,6 +919,7 @@ select option { background:#0D1526; color:#F0F6FF; }
       <button class="btn btn-violet" onclick="showPage('dataload')">⬆ Data Load</button>
       <button class="btn btn-primary" id="run-all-btn" onclick="runAllSteps()">✦ Run All Steps</button>
       <button class="btn btn-ghost btn-sm" onclick="openModal('about-modal');initAboutModal()" title="About · AI · Settings" style="padding:6px 10px;">⊕ About</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleHelp()" id="help-toggle-btn" title="Help & Documentation" style="padding:6px 10px;">? Help</button>
       <button class="btn btn-ghost btn-sm" onclick="exitApp()" title="Exit to main menu" style="border-color:var(--border);padding:6px 10px;">✕ Exit</button>
     </div>
   </header>
@@ -2185,6 +2256,53 @@ select option { background:#0D1526; color:#F0F6FF; }
 <div class="toast-container" id="tc"></div>
 
 <script>
+
+// ═══════════════════════════════════════════════════════
+//  IP PROTECTION
+// ═══════════════════════════════════════════════════════
+(function(){
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; })
+
+  // Disable common inspect shortcuts
+  document.addEventListener('keydown', function(e){
+    // F12
+    if(e.keyCode === 123) { e.preventDefault(); return false; }
+    // Ctrl+Shift+I / Cmd+Option+I (inspect)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 73 || e.key === 'I')) { e.preventDefault(); return false; }
+    // Ctrl+Shift+J (console)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 74 || e.key === 'J')) { e.preventDefault(); return false; }
+    // Ctrl+Shift+C (element picker)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 67 || e.key === 'C')) { e.preventDefault(); return false; }
+    // Ctrl+U (view source)
+    if((e.ctrlKey || e.metaKey) && (e.keyCode === 85 || e.key === 'u')) { e.preventDefault(); return false; }
+    // Ctrl+S (save)
+    if((e.ctrlKey || e.metaKey) && (e.keyCode === 83 || e.key === 's')) { e.preventDefault(); return false; }
+    // Ctrl+A (select all)
+    if((e.ctrlKey || e.metaKey) && (e.keyCode === 65 || e.key === 'a')) { e.preventDefault(); return false; }
+  })
+
+  // Detect DevTools open (size-based heuristic)
+  var threshold = 160
+  function detectDevTools(){
+    if(window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold){
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#060A14;flex-direction:column;gap:16px"><div style="font-size:36px">⬡</div><div style="color:#F8FAFF;font-size:18px;font-weight:600">CashFlow AI</div><div style="color:#64748b;font-size:14px">Developer tools are disabled for this application.</div><div style="color:#64748b;font-size:12px">© 2026 Hindle Consultants Pty Ltd · All rights reserved.</div></div>'
+    }
+  }
+  // Check periodically
+  setInterval(detectDevTools, 1000)
+
+  // Copyright watermark in console
+  setTimeout(function(){
+    try {
+      console.log('%c⬡ CashFlow AI', 'font-size:20px;font-weight:bold;color:#0EA5A0')
+      console.log('%cCopyright © 2026 Hindle Consultants Pty Ltd. All rights reserved.', 'color:#64748b;font-size:12px')
+      console.log('%cUnauthorised copying, reverse engineering or distribution of this software is strictly prohibited.', 'color:#f87171;font-size:11px')
+      console.log('%cContact: legal@hindleconsultants.com.au', 'color:#64748b;font-size:11px')
+    } catch(e){}
+  }, 500)
+})()
+
 // ═══════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════
@@ -5798,7 +5916,7 @@ function clRender() {
   var c = document.getElementById('cl-messages')
   if (!c) return
   if (!CL_MSGS.length) {
-    c.innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">🤖</div><div class="cl-empty-title">Ask Claude anything</div><div style="font-size:11px;color:var(--text3);margin-bottom:10px">Cash application · AR · Bank formats · Automation · ERP</div><div class="cl-suggestions"><button class="cl-sug" onclick="clSuggest(this)">How do I configure SFTP file pickup?</button><button class="cl-sug" onclick="clSuggest(this)">Explain MT940 bank file format</button><button class="cl-sug" onclick="clSuggest(this)">How does ML matching learn from allocations?</button><button class="cl-sug" onclick="clSuggest(this)">Set up ClickSend email notifications</button><button class="cl-sug" onclick="clSuggest(this)">Walk me through deploying to Vercel</button></div></div>'
+    c.innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">🤖</div><div class="cl-empty-title">Ask Claude anything</div><div style="font-size:10px;color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 8px;margin-bottom:8px">⚠ Requires a local server. Run: <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">npx serve .</code> in the app folder, then open http://localhost:3000/cashflow-app.html</div><div style="font-size:11px;color:var(--text3);margin-bottom:10px">Cash application · AR · Bank formats · Automation · ERP</div><div class="cl-suggestions"><button class="cl-sug" onclick="clSuggest(this)">How do I configure SFTP file pickup?</button><button class="cl-sug" onclick="clSuggest(this)">Explain MT940 bank file format</button><button class="cl-sug" onclick="clSuggest(this)">How does ML matching learn from allocations?</button><button class="cl-sug" onclick="clSuggest(this)">Set up ClickSend email notifications</button><button class="cl-sug" onclick="clSuggest(this)">Walk me through deploying to Vercel</button></div></div>'
     return
   }
   c.innerHTML = CL_MSGS.map(function(m) {
@@ -5833,14 +5951,58 @@ async function clSend() {
     .map(function(m) { return { role: m.role === 'user' ? 'user' : 'assistant', content: m.text } })
 
   try {
-    // Get API key from localStorage or prompt
+    // Use /api/claude when served from a real server (Vercel, Next.js)
+    // Only use direct Anthropic API when opened as a local file
+    var isLocalFile = window.location.protocol === 'file:'
+
+    if (!isLocalFile) {
+      // Server mode - key is server-side, just call the API route
+      var res = await fetch('/api/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages, stream: true })
+      })
+
+      if (!res.ok) {
+        var errText = await res.text().catch(function() { return '' })
+        var errMsg = 'Server error ' + res.status
+        try { errMsg = JSON.parse(errText).error || errMsg } catch(e) {}
+        CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
+        CL_MSGS.push({ role: 'assistant', text: '⚠ ' + errMsg })
+        clRender(); CL_BUSY = false; return
+      }
+
+      var reader = res.body.getReader()
+      var decoder = new TextDecoder()
+      var fullText = ''
+      CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
+      CL_MSGS.push({ role: 'assistant', text: '' })
+      while (true) {
+        var chunk = await reader.read()
+        if (chunk.done) break
+        var lines = decoder.decode(chunk.value, { stream: true }).split('\n')
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i].startsWith('data: ')) continue
+          var data = lines[i].slice(6).trim()
+          if (data === '[DONE]') continue
+          try {
+            var parsed = JSON.parse(data)
+            var txt = parsed.text || ''
+            if (txt) { fullText += txt; CL_MSGS[CL_MSGS.length-1].text = fullText; clRender() }
+          } catch(e) {}
+        }
+      }
+      clRender(); CL_BUSY = false; return
+    }
+
+    // Local file mode - use direct Anthropic API
     var apiKey = ''
     try { apiKey = localStorage.getItem('cl_key') || '' } catch(e) {}
     if (!apiKey) {
       apiKey = prompt('Enter your Anthropic API key (sk-ant-...):') || ''
       if (!apiKey) {
         CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
-        CL_MSGS.push({ role: 'assistant', text: 'No API key provided. Enter your Anthropic key to use Claude.' })
+        CL_MSGS.push({ role: 'assistant', text: 'No API key. Open via a server or enter your key.' })
         clRender(); CL_BUSY = false; return
       }
       try { localStorage.setItem('cl_key', apiKey) } catch(e) {}
@@ -5909,7 +6071,11 @@ async function clSend() {
 
   } catch(err) {
     CL_MSGS = CL_MSGS.filter(function(m) { return m.role !== 'thinking' })
-    CL_MSGS.push({ role: 'assistant', text: '⚠ ' + (err.message || 'Network error') + ' — is npm run dev running?' })
+    var isFile = window.location.protocol === 'file:'
+    var errMsg = isFile 
+      ? '⚠ Chrome blocks API calls from local files. Two options:\n\n1. Serve via a local server:\n   In PowerShell: npx serve . then open http://localhost:3000\n\n2. Enable in Chrome: start Chrome with --disable-web-security flag'
+      : '⚠ ' + (err.message || 'Network error')
+    CL_MSGS.push({ role: 'assistant', text: errMsg })
   }
 
   clRender()
@@ -6043,6 +6209,1109 @@ function renderDashboard(){
 }
 
 // Hook renderDashboard into showPage
+
+
+// ═══════════════════════════════════════════════════════
+//  HELP SYSTEM
+// ═══════════════════════════════════════════════════════
+var HELP_OPEN = false
+var HELP_CURRENT_FILTER = 'all'
+
+const HELP_ARTICLES = [
+
+  // ── GETTING STARTED ──────────────────────────────────────────────────────
+  {
+    id: 'gs-overview',
+    cat: 'getting-started',
+    icon: '⬡',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#0284C7)',
+    title: 'CashFlow AI Overview',
+    badge: 'Start here',
+    badgeBg: '#0EA5A0',
+    content: `
+      <p>CashFlow AI is a governed cash application platform that automates the process of matching bank transactions to customer invoices. It uses AI (Claude by Anthropic) and machine learning to achieve 95%+ auto-match rates.</p>
+      <h4>Core workflow</h4>
+      <ol>
+        <li>Load your accounts (customer master data) and open items (outstanding invoices)</li>
+        <li>Upload or auto-pickup your bank file (MT940, CAMT053, BAI2, or CSV)</li>
+        <li>Run the pipeline — validate, parse, scan emails, match, flag exceptions</li>
+        <li>Review exceptions and allocate remaining unmatched transactions</li>
+        <li>Approve and export to your ERP (SAP, Oracle, NetSuite, Xero)</li>
+      </ol>
+      <h4>Key concepts</h4>
+      <ul>
+        <li><strong>Batch session</strong> — one complete run of the pipeline against a bank file</li>
+        <li><strong>Allocation</strong> — linking a bank transaction to one or more invoices</li>
+        <li><strong>Exception</strong> — a transaction that couldn't be auto-matched and needs manual review</li>
+        <li><strong>On Account</strong> — a payment received but not matched to any invoice</li>
+        <li><strong>Match confidence</strong> — AI's certainty score (0-100%) that a match is correct</li>
+      </ul>
+      <div class="tip">Start with the Dashboard to see your current session status, then use the pipeline pages left to right.</div>
+    `
+  },
+  {
+    id: 'gs-first-run',
+    cat: 'getting-started',
+    icon: '▶',
+    iconBg: 'linear-gradient(135deg,#4ADE80,#0EA5A0)',
+    title: 'Your first cash application run',
+    badge: 'Quick start',
+    badgeBg: '#4ADE80',
+    content: `
+      <h4>Step-by-step first run</h4>
+      <ol>
+        <li>Go to <strong>Data Management</strong> — upload your accounts CSV and open items CSV</li>
+        <li>Go to <strong>Visual Processing</strong> — drag and drop your bank file</li>
+        <li>Click <strong>Run All Steps</strong> to execute the full pipeline</li>
+        <li>Review any exceptions in the <strong>Exception Queue</strong></li>
+        <li>Go to <strong>ERP Export</strong> to generate and approve the output file</li>
+      </ol>
+      <h4>Minimum data required</h4>
+      <ul>
+        <li>Accounts CSV: AccountNumber, Name, Email (optional)</li>
+        <li>Open Items CSV: InvoiceNumber, AccountNumber, Amount, DueDate</li>
+        <li>Bank file: Any supported format (MT940 recommended)</li>
+      </ul>
+      <div class="tip">Use the sample data in Data Management to test the platform before loading your real data.</div>
+      <div class="warn">Always load accounts before open items — accounts must exist for invoice matching to work correctly.</div>
+    `
+  },
+  {
+    id: 'gs-login',
+    cat: 'getting-started',
+    icon: '🔐',
+    iconBg: 'linear-gradient(135deg,#8B5CF6,#6366F1)',
+    title: 'Login, users and roles',
+    content: `
+      <h4>Default credentials</h4>
+      <ul>
+        <li>Admin: admin@hindleconsultants.com.au / CashFlow2024!</li>
+        <li>Controller: controller@hindleconsultants.com.au / Controller2024!</li>
+      </ul>
+      <h4>User roles</h4>
+      <ul>
+        <li><strong>Accountant (L1-L2)</strong> — can process transactions, view reports, cannot approve high-value items</li>
+        <li><strong>Controller (L3)</strong> — can approve allocations, manage exceptions, configure settings</li>
+        <li><strong>Admin (L4)</strong> — full access, user management, governance configuration</li>
+        <li><strong>Super Admin</strong> — platform-wide access, cross-org visibility</li>
+      </ul>
+      <h4>Inviting team members</h4>
+      <ol>
+        <li>Click the ⚡ Super Admin Login button in the sidebar bottom</li>
+        <li>Or use the API: POST /api/users with email, name, and role</li>
+        <li>An invite email is sent — the user sets their own password</li>
+      </ol>
+      <div class="tip">Use the Super Admin Login (⚡ button in sidebar) to quickly switch identity for testing different permission levels.</div>
+    `
+  },
+
+  // ── PIPELINE ──────────────────────────────────────────────────────────────
+  {
+    id: 'pipeline-overview',
+    cat: 'pipeline',
+    icon: '⊛',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#0284C7)',
+    title: 'Visual Processing Pipeline',
+    content: `
+      <p>The pipeline is the heart of CashFlow AI. It processes your bank file through 6 sequential steps, each building on the previous.</p>
+      <h4>The 6 pipeline steps</h4>
+      <ol>
+        <li><strong>Upload</strong> — bank file loaded and hash-verified for integrity</li>
+        <li><strong>Validate</strong> — schema validation, date normalisation, duplicate detection</li>
+        <li><strong>Parse</strong> — extract payer name, reference, amount, value date from raw format</li>
+        <li><strong>Scan</strong> — email scanner searches for remittance advices matching transactions</li>
+        <li><strong>Match</strong> — AI + ML matching against open invoices</li>
+        <li><strong>Flag</strong> — unmatched transactions moved to exception queue</li>
+      </ol>
+      <h4>Running the pipeline</h4>
+      <ul>
+        <li><strong>Run All Steps</strong> — executes all 6 steps in sequence</li>
+        <li><strong>Individual steps</strong> — click any step card to expand and run it alone</li>
+        <li><strong>Re-run</strong> — you can re-run any step; results replace previous output</li>
+      </ul>
+      <div class="tip">Watch the KPI strip at the top — Total Value, Matched %, and Exceptions update in real-time as steps complete.</div>
+      <div class="warn">Do not close the browser tab while the pipeline is running. Use Suspend to pause safely.</div>
+    `
+  },
+  {
+    id: 'pipeline-suspend',
+    cat: 'pipeline',
+    icon: '⏸',
+    iconBg: 'linear-gradient(135deg,#F59E0B,#EF4444)',
+    title: 'Suspending and resuming sessions',
+    content: `
+      <p>A batch session can be suspended at any point — for example, at end of day or when waiting for missing remittances.</p>
+      <h4>How to suspend</h4>
+      <ol>
+        <li>Click <strong>Suspend</strong> in the topbar</li>
+        <li>The current session state is saved</li>
+        <li>You can safely close the browser</li>
+      </ol>
+      <h4>How to resume</h4>
+      <ol>
+        <li>Open the app — your session will be waiting</li>
+        <li>Click <strong>Batch</strong> in the topbar to see all sessions</li>
+        <li>Click Resume on the suspended session</li>
+      </ol>
+      <h4>Automation and open sessions</h4>
+      <p>If the scheduler runs while a session is open, behaviour depends on your <strong>Open Batch Handling</strong> setting in Automation:</p>
+      <ul>
+        <li><strong>Suspend open batch</strong> — current session is suspended, new run starts (recommended)</li>
+        <li><strong>Skip scheduled run</strong> — automation skips until session is closed</li>
+        <li><strong>Clear open batch</strong> — current session discarded, fresh run starts</li>
+      </ul>
+      <div class="warn">Clearing an open batch permanently discards unconfirmed allocations. Use with caution.</div>
+    `
+  },
+  {
+    id: 'pipeline-kpis',
+    cat: 'pipeline',
+    icon: '⊞',
+    iconBg: 'linear-gradient(135deg,#8B5CF6,#6366F1)',
+    title: 'Understanding KPIs and metrics',
+    content: `
+      <h4>Pipeline KPIs explained</h4>
+      <ul>
+        <li><strong>Total Value</strong> — sum of all bank transaction amounts in the current file</li>
+        <li><strong>Records</strong> — count of individual bank transactions</li>
+        <li><strong>Matched %</strong> — percentage of transactions matched to invoices (by count)</li>
+        <li><strong>Exceptions</strong> — transactions sent to manual review queue</li>
+      </ul>
+      <h4>Dashboard KPIs</h4>
+      <ul>
+        <li><strong>Cash Applied MTD</strong> — total value allocated this month</li>
+        <li><strong>Auto-Match Rate</strong> — % matched without human intervention</li>
+        <li><strong>Open Exceptions</strong> — current exception queue size</li>
+        <li><strong>Gov Score</strong> — governance compliance score (based on rule adherence)</li>
+      </ul>
+      <div class="tip">A match rate below 80% usually indicates your open items data is out of date. Refresh your debtors and invoice data first.</div>
+    `
+  },
+
+  // ── MATCHING ──────────────────────────────────────────────────────────────
+  {
+    id: 'matching-how',
+    cat: 'matching',
+    icon: '⚡',
+    iconBg: 'linear-gradient(135deg,#F59E0B,#EF4444)',
+    title: 'How AI matching works',
+    content: `
+      <p>CashFlow AI uses a two-stage matching approach: ML pattern matching first, then AI (Claude) for ambiguous cases.</p>
+      <h4>Stage 1 — ML matching (fast, free)</h4>
+      <p>The ML engine checks historical confirmed allocations. If a payer + amount + reference combination has been seen before, it applies the same match automatically.</p>
+      <ul>
+        <li>Threshold: 92% confidence required for auto-match</li>
+        <li>Zero API cost — runs entirely on your historical data</li>
+        <li>Gets smarter over time as you confirm more allocations</li>
+      </ul>
+      <h4>Stage 2 — AI matching (Claude)</h4>
+      <p>For transactions not matched by ML, Claude analyses the bank reference, payer name, and amount against all open invoices.</p>
+      <ul>
+        <li>Threshold: 75% confidence required for AI auto-match</li>
+        <li>Claude reads remittance text, partial references, and abbreviations</li>
+        <li>Provides reasoning text explaining why it chose a match</li>
+        <li>Flags partial payments and suggests split allocations</li>
+      </ul>
+      <h4>Confidence thresholds</h4>
+      <ul>
+        <li><strong>92%+</strong> — auto-allocated, logged, no human review needed</li>
+        <li><strong>75-92%</strong> — AI match, flagged for optional review</li>
+        <li><strong>Below 75%</strong> — sent to exception queue for manual allocation</li>
+      </ul>
+      <div class="tip">Adjust thresholds in Governance Rules to suit your risk appetite. Lower thresholds = more auto-matches but higher error risk.</div>
+    `
+  },
+  {
+    id: 'matching-ml',
+    cat: 'matching',
+    icon: '🧠',
+    iconBg: 'linear-gradient(135deg,#8B5CF6,#EC4899)',
+    title: 'ML learning and pattern memory',
+    content: `
+      <p>Every allocation you confirm teaches the ML engine. Over time it builds a pattern memory of your customer payment behaviour.</p>
+      <h4>What the ML remembers</h4>
+      <ul>
+        <li>Payer name variations (e.g. "ACME PTY LTD" = "ACME" = "A.C.M.E.")</li>
+        <li>Reference formats per customer</li>
+        <li>Typical payment amounts and invoice combinations</li>
+        <li>Partial payment patterns</li>
+      </ul>
+      <h4>Enabling ML learning</h4>
+      <ol>
+        <li>Go to Automation → Matching Engine</li>
+        <li>Enable <strong>Learn from confirmed allocations</strong></li>
+        <li>Every confirmed allocation adds to the training data</li>
+      </ol>
+      <h4>Viewing ML statistics</h4>
+      <p>The Matching Engine tab shows how many patterns have been learned and the ML hit rate for the current session.</p>
+      <div class="tip">The ML becomes effective after about 50-100 confirmed allocations. Your match rate will increase significantly in the first few weeks.</div>
+    `
+  },
+  {
+    id: 'matching-exceptions',
+    cat: 'matching',
+    icon: '⚠',
+    iconBg: 'linear-gradient(135deg,#EF4444,#F59E0B)',
+    title: 'Handling exceptions',
+    content: `
+      <p>Exceptions are transactions the system couldn't auto-match. They require manual review in the Exception Queue.</p>
+      <h4>Types of exceptions</h4>
+      <ul>
+        <li><strong>No match found</strong> — no invoice within tolerance matches this transaction</li>
+        <li><strong>Multiple matches</strong> — two or more invoices equally likely; human judgement needed</li>
+        <li><strong>Partial payment</strong> — amount doesn't match any single invoice exactly</li>
+        <li><strong>Unknown payer</strong> — payer name not found in your accounts data</li>
+        <li><strong>Overpayment</strong> — amount exceeds all open invoices for this customer</li>
+      </ul>
+      <h4>Resolving exceptions</h4>
+      <ol>
+        <li>Click an exception row to expand the detail panel</li>
+        <li>Review the AI suggestion and reasoning (if available)</li>
+        <li>Use the <strong>Allocation Panel</strong> to manually select the correct invoice(s)</li>
+        <li>Apply a variance reason code if the amount doesn't match exactly</li>
+        <li>Confirm the allocation — it moves to approved status</li>
+      </ol>
+      <h4>Sending to On Account</h4>
+      <p>If no matching invoice exists, use <strong>Move to On Account</strong> to hold the payment as an unmatched credit.</p>
+      <div class="tip">Right-click any exception to quickly assign it to On Account or flag it for colleague review.</div>
+    `
+  },
+  {
+    id: 'matching-allocation',
+    cat: 'matching',
+    icon: '⇌',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#8B5CF6)',
+    title: 'Allocation Panel — manual matching',
+    content: `
+      <p>The Allocation Panel is a 4-column workspace for manually matching transactions to invoices.</p>
+      <h4>The 4 panels</h4>
+      <ul>
+        <li><strong>Customers</strong> — filter by customer account</li>
+        <li><strong>Bank transactions</strong> — select the unmatched payment</li>
+        <li><strong>Open invoices</strong> — select one or more invoices to allocate against</li>
+        <li><strong>Document viewer</strong> — view the remittance or bank statement line</li>
+      </ul>
+      <h4>Making a manual allocation</h4>
+      <ol>
+        <li>Select the bank transaction on the left</li>
+        <li>Select the matching invoice(s) on the right</li>
+        <li>The system calculates any variance (underpayment/overpayment)</li>
+        <li>Apply a variance reason code if required by governance rules</li>
+        <li>Click <strong>Confirm Allocation</strong></li>
+      </ol>
+      <h4>Split allocations</h4>
+      <p>One bank transaction can be allocated across multiple invoices. Select all relevant invoices — the amounts are split proportionally or you can set custom amounts.</p>
+      <div class="tip">Use keyboard shortcut <kbd>Enter</kbd> to confirm an allocation once invoices are selected.</div>
+    `
+  },
+
+  // ── DATA ──────────────────────────────────────────────────────────────────
+  {
+    id: 'data-accounts',
+    cat: 'data',
+    icon: '◉',
+    iconBg: 'linear-gradient(135deg,#0284C7,#0EA5A0)',
+    title: 'Loading accounts (customer data)',
+    content: `
+      <p>Accounts are your customer master records — the debtors who owe you money. The matching engine uses accounts to identify who made each payment.</p>
+      <h4>CSV format</h4>
+      <div class="code">AccountNumber, Name, TradingName, Email, Phone, Address, Region, CreditLimit, PaymentTerms</div>
+      <h4>Required fields</h4>
+      <ul>
+        <li><strong>AccountNumber</strong> — unique identifier (must match your ERP)</li>
+        <li><strong>Name</strong> — legal entity name (used for payer matching)</li>
+      </ul>
+      <h4>Optional but recommended</h4>
+      <ul>
+        <li><strong>TradingName</strong> — common name variations help matching</li>
+        <li><strong>Email</strong> — used for email scanner matching</li>
+        <li><strong>Region</strong> — enables regional routing in automation</li>
+      </ul>
+      <h4>Loading methods</h4>
+      <ul>
+        <li><strong>CSV upload</strong> — drag and drop in Data Management</li>
+        <li><strong>URL pull</strong> — configure a REST endpoint in Automation → Source Files</li>
+        <li><strong>SFTP</strong> — automated nightly pickup from your ERP</li>
+        <li><strong>API</strong> — POST to /api/accounts with JSON array</li>
+      </ul>
+      <div class="warn">Re-loading accounts replaces all existing account data. Any accounts no longer in the file will be removed.</div>
+    `
+  },
+  {
+    id: 'data-openitems',
+    cat: 'data',
+    icon: '◫',
+    iconBg: 'linear-gradient(135deg,#F59E0B,#0284C7)',
+    title: 'Loading open items (invoices)',
+    content: `
+      <p>Open items are outstanding invoices that haven't been fully paid yet. The matching engine allocates bank transactions against these invoices.</p>
+      <h4>CSV format</h4>
+      <div class="code">InvoiceNumber, AccountNumber, CustomerName, InvoiceDate, DueDate, OriginalAmount, OutstandingAmount, Currency, Reference</div>
+      <h4>Required fields</h4>
+      <ul>
+        <li><strong>InvoiceNumber</strong> — must be unique per customer</li>
+        <li><strong>AccountNumber</strong> — must match an account in your accounts file</li>
+        <li><strong>OriginalAmount</strong> — invoice face value</li>
+        <li><strong>OutstandingAmount</strong> — current balance due</li>
+      </ul>
+      <h4>Keeping open items current</h4>
+      <p>For best match rates, reload open items daily. Stale data is the #1 cause of low match rates.</p>
+      <div class="tip">In Automation → Source Files, set up daily SFTP or URL pickup of your AR aging report from your ERP. This keeps data current automatically.</div>
+      <div class="warn">OutstandingAmount must reflect all payments already posted in your ERP. Double-counting causes incorrect allocations.</div>
+    `
+  },
+  {
+    id: 'data-bankfiles',
+    cat: 'data',
+    icon: '⬡',
+    iconBg: 'linear-gradient(135deg,#6366F1,#8B5CF6)',
+    title: 'Bank file formats',
+    content: `
+      <p>CashFlow AI supports all major bank statement formats used in Australia and New Zealand.</p>
+      <h4>Supported formats</h4>
+      <ul>
+        <li><strong>MT940</strong> — SWIFT standard, most ANZ banks, recommended format</li>
+        <li><strong>CAMT.053</strong> — ISO 20022, newer format replacing MT940</li>
+        <li><strong>BAI2</strong> — common in US/global operations</li>
+        <li><strong>CSV</strong> — custom mapping via the Bank File Viewer</li>
+      </ul>
+      <h4>MT940 key fields used for matching</h4>
+      <ul>
+        <li><strong>:61: Statement line</strong> — value date, amount, transaction type</li>
+        <li><strong>:86: Information to owner</strong> — payer name, reference, description</li>
+        <li><strong>:60F/:62F</strong> — opening and closing balances (used for validation)</li>
+      </ul>
+      <h4>CSV mapping</h4>
+      <p>For CSV files, use the <strong>Bank File Viewer → Mapping Profiles</strong> to define which columns map to date, amount, payer, and reference. Save profiles for reuse.</p>
+      <div class="tip">Use the Bank File Viewer (sidebar → Bank File Viewer) to inspect raw file content and verify fields are being parsed correctly before running the pipeline.</div>
+    `
+  },
+  {
+    id: 'data-emailscanner',
+    cat: 'data',
+    icon: '✉',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#8B5CF6)',
+    title: 'Email scanner and remittances',
+    content: `
+      <p>The email scanner connects to your AR inbox and extracts remittance details from customer emails — dramatically improving match rates for customers who send payment advice.</p>
+      <h4>How it works</h4>
+      <ol>
+        <li>Connect your email account (IMAP) in Email Scanner → Add Account</li>
+        <li>The scanner searches emails received in the last 7 days</li>
+        <li>Claude extracts invoice numbers, amounts, and payment references from email bodies and PDF attachments</li>
+        <li>Extracted references are used in the Match step to improve confidence scores</li>
+      </ol>
+      <h4>What Claude extracts</h4>
+      <ul>
+        <li>Invoice numbers (even partial or formatted differently)</li>
+        <li>Payment amounts and currencies</li>
+        <li>Bank reference numbers</li>
+        <li>EFT/BPAY reference codes</li>
+        <li>Customer account numbers</li>
+      </ul>
+      <h4>Supported email sources</h4>
+      <ul>
+        <li>Microsoft 365 / Outlook (IMAP)</li>
+        <li>Google Workspace / Gmail (IMAP)</li>
+        <li>Any IMAP-compatible mail server</li>
+      </ul>
+      <div class="tip">For PDF remittances, Claude reads the attachment text. For image-based PDFs, ensure your scanner settings include OCR in your email client.</div>
+    `
+  },
+
+  // ── AUTOMATION ────────────────────────────────────────────────────────────
+  {
+    id: 'auto-overview',
+    cat: 'automation',
+    icon: '⚙',
+    iconBg: 'linear-gradient(135deg,#6366F1,#0EA5A0)',
+    title: 'Process Automation overview',
+    content: `
+      <p>The automation engine runs the entire cash application pipeline automatically on a schedule — no human interaction required for routine daily processing.</p>
+      <h4>What automation does</h4>
+      <ol>
+        <li>Picks up bank file from configured source (SFTP/URL/S3)</li>
+        <li>Loads latest debtors and open items</li>
+        <li>Runs the full 6-step pipeline</li>
+        <li>Generates the ERP output file</li>
+        <li>Delivers output to configured destination</li>
+        <li>Sends completion notification via email/SMS</li>
+      </ol>
+      <h4>Automation tabs</h4>
+      <ul>
+        <li><strong>Schedule</strong> — when to run and timezone</li>
+        <li><strong>Source Files</strong> — where to pick up bank and debtor files</li>
+        <li><strong>Debtors/Regions</strong> — region-based routing rules</li>
+        <li><strong>Matching Engine</strong> — AI and ML thresholds</li>
+        <li><strong>Output & Delivery</strong> — ERP format and delivery destination</li>
+        <li><strong>Run History</strong> — logs of all previous runs</li>
+      </ul>
+      <div class="tip">Always test your automation config manually (Run Now button) before enabling the scheduler.</div>
+    `
+  },
+  {
+    id: 'auto-schedule',
+    cat: 'automation',
+    icon: '⏱',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#0284C7)',
+    title: 'Scheduling and timezones',
+    content: `
+      <h4>Schedule options</h4>
+      <ul>
+        <li><strong>Daily</strong> — runs every day at the configured time</li>
+        <li><strong>Weekdays</strong> — Monday to Friday only (recommended for most businesses)</li>
+        <li><strong>Weekly</strong> — one specific day per week</li>
+        <li><strong>Custom</strong> — cron expression for complex schedules</li>
+      </ul>
+      <h4>Recommended schedule</h4>
+      <p>Configure the run for <strong>6:00 AM in your local timezone</strong>. This ensures the file is processed before your team starts work and any exceptions are ready for review by 9 AM.</p>
+      <h4>Timezone handling</h4>
+      <p>All schedules are stored in your configured timezone. The system automatically handles daylight saving time changes — you don't need to adjust your schedule twice a year.</p>
+      <h4>Open batch handling</h4>
+      <ul>
+        <li><strong>Suspend open batch</strong> — safest option; suspends any open session before starting (recommended)</li>
+        <li><strong>Skip scheduled run</strong> — skips the run if a session is open, tries again next scheduled time</li>
+        <li><strong>Clear open batch</strong> — discards open session and starts fresh (use with caution)</li>
+        <li><strong>Wait to complete</strong> — waits N minutes then suspends if still running</li>
+      </ul>
+      <div class="tip">Set the timeout to 60 minutes. If automation takes longer than this, it usually means a very large file or a matching issue that needs investigation.</div>
+    `
+  },
+  {
+    id: 'auto-sources',
+    cat: 'automation',
+    icon: '📥',
+    iconBg: 'linear-gradient(135deg,#F59E0B,#EF4444)',
+    title: 'Source file configuration',
+    content: `
+      <p>Configure where automation picks up your bank file and debtor data automatically each run.</p>
+      <h4>Bank file sources</h4>
+      <ul>
+        <li><strong>URL</strong> — direct HTTP/HTTPS download from your bank or internal system</li>
+        <li><strong>SFTP</strong> — secure FTP pickup from a configured server</li>
+        <li><strong>S3</strong> — Amazon S3 bucket with AWS credentials</li>
+      </ul>
+      <h4>SFTP configuration</h4>
+      <div class="code">Host: sftp.yourbank.com.au
+Port: 22
+Username: cashflow_user
+Password: ••••••••
+Path: /outgoing/statements/today.mt940</div>
+      <h4>Dynamic date in file paths</h4>
+      <p>Use date tokens in file paths to automatically reference today's file:</p>
+      <div class="code">/statements/{YYYY}/{MM}/bank_{YYYYMMDD}.mt940</div>
+      <h4>Debtor data sources</h4>
+      <p>Same source types available. Configure a daily AR aging export from your ERP to the same SFTP and point the debtors source at that path.</p>
+      <div class="warn">Test SFTP credentials using the <strong>Test Connection</strong> button before enabling automation. Failed connections silently skip the run.</div>
+    `
+  },
+  {
+    id: 'auto-regions',
+    cat: 'automation',
+    icon: '◉',
+    iconBg: 'linear-gradient(135deg,#8B5CF6,#6366F1)',
+    title: 'Multi-region routing',
+    content: `
+      <p>If your business has multiple entities, bank accounts, or geographic divisions, region routing lets you run separate automation pipelines per region.</p>
+      <h4>How regions work</h4>
+      <ul>
+        <li>Each region has its own bank account filter</li>
+        <li>Debtors are assigned to regions based on the Region field in your accounts data</li>
+        <li>The automation runs a separate pipeline for each active region</li>
+        <li>Separate ERP output files are generated per region</li>
+      </ul>
+      <h4>Default regions (AU)</h4>
+      <ul>
+        <li>AU-NSW — Australia New South Wales</li>
+        <li>AU-VIC — Australia Victoria</li>
+        <li>AU-QLD — Australia Queensland</li>
+        <li>AU-WA — Australia Western Australia</li>
+        <li>NZ — New Zealand (NZD)</li>
+      </ul>
+      <h4>Adding a region</h4>
+      <ol>
+        <li>Go to Automation → Debtors/Regions</li>
+        <li>Click <strong>+ Add Region</strong></li>
+        <li>Set the region code, name, currency, and bank account filter</li>
+        <li>Tag your accounts CSV with the corresponding region code</li>
+      </ol>
+      <div class="tip">The bank account filter (BSB or account number prefix) tells the system which bank transactions belong to each region.</div>
+    `
+  },
+
+  // ── GOVERNANCE ────────────────────────────────────────────────────────────
+  {
+    id: 'gov-overview',
+    cat: 'governance',
+    icon: '⬛',
+    iconBg: 'linear-gradient(135deg,#374151,#6B7280)',
+    title: 'Governance Rules overview',
+    content: `
+      <p>Governance rules enforce financial controls and compliance requirements on your cash application process.</p>
+      <h4>Key governance controls</h4>
+      <ul>
+        <li><strong>Minimum confidence</strong> — AI matches below this threshold go to exceptions (default: 85%)</li>
+        <li><strong>Approval threshold</strong> — allocations above this value require human approval before ERP posting (default: $50,000)</li>
+        <li><strong>Dual approval</strong> — high-value allocations need sign-off from two different users</li>
+        <li><strong>Hash verification</strong> — all bank files must pass SHA-256 hash check before processing</li>
+        <li><strong>Auto archive</strong> — processed files automatically archived after successful run</li>
+        <li><strong>Retention period</strong> — how long to keep audit logs and processed files (default: 7 years)</li>
+      </ul>
+      <h4>Variance reason codes</h4>
+      <p>When an allocation amount doesn't exactly match an invoice, a reason code must be applied. Default codes include:</p>
+      <ul>
+        <li>DISC — Early payment discount</li>
+        <li>DAMT — Damaged goods deduction</li>
+        <li>RTRN — Return / credit note</li>
+        <li>UNKN — Unknown — investigate</li>
+      </ul>
+      <div class="warn">Changes to governance rules take effect immediately for new sessions. Existing in-progress sessions use the rules that were active when they started.</div>
+    `
+  },
+  {
+    id: 'gov-audit',
+    cat: 'governance',
+    icon: '◈',
+    iconBg: 'linear-gradient(135deg,#0284C7,#6366F1)',
+    title: 'Audit Trail and hash chain',
+    content: `
+      <p>Every action in CashFlow AI is recorded in an immutable audit trail. The trail uses SHA-256 hash chaining to detect any tampering.</p>
+      <h4>What is logged</h4>
+      <ul>
+        <li>Every allocation (confirmed, rejected, modified)</li>
+        <li>Every pipeline step execution</li>
+        <li>Every user login and logout</li>
+        <li>Every file upload and download</li>
+        <li>Every governance rule change</li>
+        <li>Every ERP export</li>
+        <li>Every approval and rejection</li>
+      </ul>
+      <h4>Hash chain integrity</h4>
+      <p>Each audit event contains the hash of the previous event. If any event is modified or deleted, the chain breaks and the verification check fails.</p>
+      <h4>Verifying the chain</h4>
+      <ol>
+        <li>Go to Audit Trail page</li>
+        <li>Click <strong>Verify Chain</strong></li>
+        <li>The system checks every hash link back to the genesis entry</li>
+        <li>A broken chain is reported with the exact event where it broke</li>
+      </ol>
+      <div class="tip">Run the chain verification at least monthly. The verification result should be included in your monthly reconciliation sign-off.</div>
+    `
+  },
+  {
+    id: 'gov-approvals',
+    cat: 'governance',
+    icon: '✦',
+    iconBg: 'linear-gradient(135deg,#4ADE80,#0EA5A0)',
+    title: 'Approval workflows',
+    content: `
+      <p>High-value allocations require explicit approval before they can be included in an ERP export.</p>
+      <h4>When approval is required</h4>
+      <ul>
+        <li>Allocation amount exceeds the approval threshold (default $50,000)</li>
+        <li>Dual approval enabled and only one approver has signed off</li>
+        <li>Manual override on any allocation by a controller</li>
+      </ul>
+      <h4>Approving an allocation</h4>
+      <ol>
+        <li>Go to the <strong>Approvals</strong> page</li>
+        <li>Review the allocation details — customer, invoice, amount, match method</li>
+        <li>Click <strong>Approve</strong> or <strong>Reject</strong></li>
+        <li>Add a comment if rejecting (required by governance rules)</li>
+      </ol>
+      <h4>Dual approval</h4>
+      <p>When dual approval is enabled, two different users must approve before an allocation proceeds. The second approver cannot be the same person who made the allocation.</p>
+      <h4>ClickSend notifications</h4>
+      <p>When an allocation requires approval, an email/SMS is automatically sent to all users with approval authority (Controller and Admin roles).</p>
+      <div class="tip">Set the approval threshold to match your authority matrix. Typically $50K for controller, $100K for CFO, unlimited for board.</div>
+    `
+  },
+  {
+    id: 'gov-onaccount',
+    cat: 'governance',
+    icon: '◐',
+    iconBg: 'linear-gradient(135deg,#F59E0B,#8B5CF6)',
+    title: 'On Account Queue',
+    content: `
+      <p>The On Account Queue holds payments that have been received but cannot be matched to any invoice. They sit as unallocated credits on the customer account.</p>
+      <h4>Common on-account scenarios</h4>
+      <ul>
+        <li>Customer paid before invoice was raised</li>
+        <li>Advance payment / deposit received</li>
+        <li>Payment references an invoice number not in your system</li>
+        <li>Overpayment — paid more than the invoice total</li>
+        <li>Unknown payer — can't identify which customer sent the money</li>
+      </ul>
+      <h4>Managing on-account items</h4>
+      <ol>
+        <li>Review each item in the On Account Queue</li>
+        <li>Apply a reason code (UNID, ADV, OVER, etc.)</li>
+        <li>Post to customer account in your ERP for future matching</li>
+        <li>When the invoice arrives, use the Allocation Panel to match it</li>
+      </ol>
+      <h4>Ageing of on-account items</h4>
+      <p>Items older than the configured max exception age trigger a governance flag. Review and resolve these regularly to keep your control score high.</p>
+      <div class="warn">On-account items still need to be posted to your ERP. Use the ERP Export with on-account flag enabled to include them in the output file.</div>
+    `
+  },
+
+  // ── ERP & EXPORT ──────────────────────────────────────────────────────────
+  {
+    id: 'erp-overview',
+    cat: 'erp',
+    icon: '⬢',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#6366F1)',
+    title: 'ERP Export overview',
+    content: `
+      <p>Once all allocations are confirmed and approved, generate an ERP output file to post the cash application into your accounting system.</p>
+      <h4>Supported ERP formats</h4>
+      <ul>
+        <li><strong>SAP IDOC</strong> — FIDCC2 format for SAP FI module</li>
+        <li><strong>Oracle AR</strong> — AutoLockbox format for Oracle Receivables</li>
+        <li><strong>NetSuite</strong> — Payment CSV import format</li>
+        <li><strong>Xero</strong> — Bank statement import JSON</li>
+        <li><strong>CSV</strong> — Generic format for custom ERP systems</li>
+        <li><strong>JSON</strong> — REST API payload for real-time posting</li>
+      </ul>
+      <h4>Export preconditions</h4>
+      <ul>
+        <li>All exceptions must be resolved (zero open exceptions)</li>
+        <li>All high-value allocations must be approved</li>
+        <li>Bank file hash must be verified</li>
+        <li>ERP approval sign-off required (if enabled in governance)</li>
+      </ul>
+      <h4>Export process</h4>
+      <ol>
+        <li>Review the reconciliation status at the top of the ERP Export page</li>
+        <li>Click <strong>Export to ERP</strong> when all preconditions are met</li>
+        <li>Review the export preview</li>
+        <li>Approve the export (records in audit trail)</li>
+        <li>File is delivered to configured destination</li>
+      </ol>
+    `
+  },
+  {
+    id: 'erp-delivery',
+    cat: 'erp',
+    icon: '📤',
+    iconBg: 'linear-gradient(135deg,#0284C7,#4ADE80)',
+    title: 'Output delivery and destinations',
+    content: `
+      <p>Once generated, the ERP output file can be automatically delivered to your ERP system or a staging location.</p>
+      <h4>Delivery methods</h4>
+      <ul>
+        <li><strong>Download</strong> — manual download from the browser</li>
+        <li><strong>SFTP</strong> — upload to a designated folder on your ERP SFTP server</li>
+        <li><strong>S3</strong> — upload to an Amazon S3 bucket</li>
+        <li><strong>REST API</strong> — POST directly to your ERP's REST endpoint</li>
+        <li><strong>Email</strong> — send as attachment to a configured email address</li>
+      </ul>
+      <h4>Filename tokens</h4>
+      <p>Use dynamic tokens in the output filename:</p>
+      <div class="code">CASHAPP_{date}_{region}_{seq}.txt
+→ CASHAPP_20260401_AU-NSW_001.txt</div>
+      <h4>Available tokens</h4>
+      <ul>
+        <li><kbd>{date}</kbd> — YYYYMMDD</li>
+        <li><kbd>{time}</kbd> — HHMMSS</li>
+        <li><kbd>{region}</kbd> — region code</li>
+        <li><kbd>{seq}</kbd> — sequence number (resets daily)</li>
+        <li><kbd>{count}</kbd> — number of records in file</li>
+      </ul>
+      <div class="tip">Configure both a primary delivery (SFTP to ERP) and a local copy for audit retention. Go to Automation → Output & Delivery.</div>
+    `
+  },
+  {
+    id: 'erp-sap',
+    cat: 'erp',
+    icon: '⬛',
+    iconBg: 'linear-gradient(135deg,#374151,#0EA5A0)',
+    title: 'SAP IDOC format guide',
+    content: `
+      <p>CashFlow AI generates FIDCC2 IDOCs for SAP Financial Accounting (FI) module bank statement processing.</p>
+      <h4>IDOC structure</h4>
+      <ul>
+        <li><strong>EDI_DC40</strong> — control record (sender, receiver, message type)</li>
+        <li><strong>E1FDBK1</strong> — bank statement header (account, date, balance)</li>
+        <li><strong>E1FDBK2</strong> — statement items (transactions)</li>
+        <li><strong>E1FDBK3</strong> — transaction detail (reference, payer, amount)</li>
+      </ul>
+      <h4>SAP configuration required</h4>
+      <ul>
+        <li>Define bank statement format (BVTYP) for FIDCC2</li>
+        <li>Configure house bank and account ID mapping</li>
+        <li>Set up posting rule variants for your transaction types</li>
+        <li>Configure tolerance groups matching your variance rules</li>
+      </ul>
+      <h4>Testing in SAP</h4>
+      <p>Use transaction <kbd>FF.5</kbd> (Import Bank Statement) in test mode first. Check the posting log before running in production.</p>
+      <div class="tip">Map your CashFlow AI account codes to SAP GL accounts in the Governance → ERP Mapping section. This ensures correct posting keys are applied.</div>
+    `
+  },
+  {
+    id: 'erp-archive',
+    cat: 'erp',
+    icon: '◱',
+    iconBg: 'linear-gradient(135deg,#6366F1,#374151)',
+    title: 'Bank File Archive',
+    content: `
+      <p>Every processed bank file is automatically archived with its full processing history, allowing you to recall and reprocess any file.</p>
+      <h4>What is archived</h4>
+      <ul>
+        <li>Original bank file (encrypted at rest)</li>
+        <li>File hash for integrity verification</li>
+        <li>Processing results (matched count, exceptions, value)</li>
+        <li>All allocations made in that session</li>
+        <li>ERP export generated from that file</li>
+        <li>Audit events for the session</li>
+      </ul>
+      <h4>Recalling a file</h4>
+      <ol>
+        <li>Go to <strong>Bank File Archive</strong></li>
+        <li>Find the file by date, region, or hash</li>
+        <li>Click <strong>Recall</strong> to load it as the current file</li>
+        <li>You can re-run matching or view the original allocations</li>
+      </ol>
+      <h4>Retention and compliance</h4>
+      <p>Archive retention is configured in Governance Rules (default 7 years / 2,555 days). Files are automatically purged after the retention period expires.</p>
+      <div class="warn">Recalling an archived file and reprocessing it will create a new session — it does not modify the original archived session data.</div>
+    `
+  },
+
+  // ── ADMIN ─────────────────────────────────────────────────────────────────
+  {
+    id: 'admin-notifications',
+    cat: 'admin',
+    icon: '✉',
+    iconBg: 'linear-gradient(135deg,#0EA5A0,#4ADE80)',
+    title: 'Setting up ClickSend notifications',
+    content: `
+      <p>CashFlow AI uses ClickSend to send email and SMS notifications for key events.</p>
+      <h4>Setup steps</h4>
+      <ol>
+        <li>Sign up at clicksend.com/au</li>
+        <li>Go to Account → API Credentials</li>
+        <li>Copy your Username and API Key</li>
+        <li>Go to Email → Senders — add and verify your sender email address</li>
+        <li>Note the Email Address ID (numeric)</li>
+        <li>In CashFlow AI, go to About → Notifications and enter your credentials</li>
+      </ol>
+      <h4>Notification events</h4>
+      <ul>
+        <li><strong>Batch complete</strong> — summary of matched/exceptions when automation run finishes</li>
+        <li><strong>Exception alert</strong> — immediate alert when exceptions require urgent review</li>
+        <li><strong>Approval required</strong> — notifies approvers when high-value item needs sign-off</li>
+        <li><strong>ERP ready</strong> — notifies when export file is ready for ERP posting</li>
+      </ul>
+      <h4>SMS configuration</h4>
+      <p>For SMS alerts, configure a From phone number (must be a ClickSend-verified sender). Recipient phone numbers are taken from user profiles.</p>
+      <div class="tip">Use the <strong>Send Test</strong> button to verify your ClickSend credentials before enabling notifications for your team.</div>
+    `
+  },
+  {
+    id: 'admin-deployment',
+    cat: 'admin',
+    icon: '🔒',
+    iconBg: 'linear-gradient(135deg,#6366F1,#0284C7)',
+    title: 'Deployment and infrastructure',
+    content: `
+      <h4>Architecture</h4>
+      <ul>
+        <li><strong>Frontend</strong> — Next.js 15 on Vercel (Sydney syd1 region)</li>
+        <li><strong>Database</strong> — Neon PostgreSQL (serverless, connection pooling)</li>
+        <li><strong>Auth</strong> — NextAuth v5 with JWT sessions (8-hour expiry)</li>
+        <li><strong>AI</strong> — Anthropic Claude claude-sonnet-4-20250514 via API</li>
+        <li><strong>Notifications</strong> — ClickSend (email + SMS)</li>
+        <li><strong>Billing</strong> — Stripe (subscriptions, webhooks)</li>
+        <li><strong>Cron</strong> — Vercel cron jobs (daily trial check, 15-min automation trigger)</li>
+      </ul>
+      <h4>Data residency</h4>
+      <ul>
+        <li>API and compute: Vercel syd1 (Sydney, Australia)</li>
+        <li>Database: Neon ap-southeast-1 (Singapore)</li>
+        <li>AI processing: Anthropic (US-based, data not retained)</li>
+      </ul>
+      <h4>Security</h4>
+      <ul>
+        <li>All data encrypted in transit (TLS 1.3)</li>
+        <li>Database encrypted at rest (AES-256)</li>
+        <li>Full org isolation — tenants cannot access each other's data</li>
+        <li>SHA-256 tamper-evident audit chain</li>
+        <li>Account lockout after 5 failed login attempts</li>
+      </ul>
+      <div class="tip">View real-time infrastructure status at /api/health — checks database, Claude API, ClickSend, and Stripe connectivity.</div>
+    `
+  },
+  {
+    id: 'admin-billing',
+    cat: 'admin',
+    icon: '💳',
+    iconBg: 'linear-gradient(135deg,#8B5CF6,#EC4899)',
+    title: 'Plans, billing and upgrades',
+    content: `
+      <h4>Plans</h4>
+      <ul>
+        <li><strong>Trial</strong> — 14 days, 3 users, 20 batch sessions, full feature access</li>
+        <li><strong>Starter</strong> — from AUD $99/month, 10 users, 200 sessions/month</li>
+        <li><strong>Professional</strong> — from AUD $349/month, 50 users, 2,000 sessions/month</li>
+        <li><strong>Enterprise</strong> — from AUD $999/month, 200 users, unlimited sessions</li>
+      </ul>
+      <h4>Annual discount</h4>
+      <p>All plans include a 20% discount when billed annually. Switch to annual in your billing portal.</p>
+      <h4>Currencies</h4>
+      <p>Plans available in AUD, USD, NZD, GBP, and EUR. Currency is selected at signup and can be changed via support.</p>
+      <h4>Upgrading</h4>
+      <ol>
+        <li>Go to About → User → Billing (or /api/billing for admins)</li>
+        <li>Select your plan and billing interval</li>
+        <li>Complete Stripe checkout — upgrade is instant</li>
+        <li>User and batch limits increase immediately</li>
+      </ol>
+      <h4>Promo codes</h4>
+      <p>Enter a promo code at checkout for discounts. Current offers:</p>
+      <ul>
+        <li><strong>LAUNCH50</strong> — 50% off first payment (Starter/Professional)</li>
+        <li><strong>HINDLE20</strong> — 20% ongoing discount (all plans)</li>
+      </ul>
+    `
+  },
+  {
+    id: 'admin-api',
+    cat: 'admin',
+    icon: '⌥',
+    iconBg: 'linear-gradient(135deg,#374151,#8B5CF6)',
+    title: 'API access and integration',
+    content: `
+      <p>CashFlow AI exposes a REST API for integration with other systems — ERP connectors, RPA bots, custom dashboards.</p>
+      <h4>Authentication</h4>
+      <p>Generate an API key in About → User → API Keys. Include it in requests:</p>
+      <div class="code">X-API-Key: cfa_your_api_key_here</div>
+      <h4>Key endpoints</h4>
+      <ul>
+        <li><strong>GET /api/accounts</strong> — list accounts</li>
+        <li><strong>POST /api/accounts</strong> — bulk upload accounts (CSV or JSON)</li>
+        <li><strong>GET /api/openitems</strong> — list open invoices</li>
+        <li><strong>POST /api/openitems</strong> — upload open items</li>
+        <li><strong>GET /api/batch</strong> — list batch sessions</li>
+        <li><strong>POST /api/batch</strong> — create/control sessions</li>
+        <li><strong>GET /api/allocations</strong> — list allocations</li>
+        <li><strong>GET /api/audit</strong> — audit log export</li>
+        <li><strong>POST /api/automation/run</strong> — trigger automation run</li>
+        <li><strong>GET /api/health</strong> — platform health check</li>
+      </ul>
+      <h4>Rate limits</h4>
+      <ul>
+        <li>Standard endpoints: 100 requests/minute</li>
+        <li>Automation trigger: 10 requests/hour</li>
+        <li>Claude chat: 50 requests/hour per IP</li>
+      </ul>
+      <div class="tip">Use the API to automate daily data loads from your ERP. Most customers set up a scheduled job to POST new open items each morning before the automation run.</div>
+    `
+  },
+  {
+    id: 'admin-troubleshoot',
+    cat: 'admin',
+    icon: '🔧',
+    iconBg: 'linear-gradient(135deg,#EF4444,#F59E0B)',
+    title: 'Troubleshooting common issues',
+    content: `
+      <h4>Low match rate (below 70%)</h4>
+      <ul>
+        <li>Reload your open items — stale invoice data is the #1 cause</li>
+        <li>Check that account numbers in your open items match your accounts file exactly</li>
+        <li>Review your governance threshold — it may be set too high</li>
+        <li>Enable email scanning to capture remittance references</li>
+      </ul>
+      <h4>Automation not running</h4>
+      <ul>
+        <li>Check Run History tab for error messages</li>
+        <li>Verify SFTP/URL source credentials using Test Connection</li>
+        <li>Ensure the scheduler is enabled (toggle in Schedule tab)</li>
+        <li>Check your plan hasn't exceeded batch limits</li>
+      </ul>
+      <h4>ERP export blocked</h4>
+      <ul>
+        <li>Resolve all open exceptions first</li>
+        <li>Ensure all high-value allocations have required approvals</li>
+        <li>Check that bank file hash verification passed</li>
+        <li>Confirm ERP approval sign-off in Governance Rules</li>
+      </ul>
+      <h4>Claude chat not responding</h4>
+      <ul>
+        <li>Check ANTHROPIC_API_KEY is set in environment variables</li>
+        <li>Verify the platform is running via Next.js (npm run dev or Vercel)</li>
+        <li>Check /api/health for Claude API connectivity status</li>
+      </ul>
+      <h4>Getting support</h4>
+      <ul>
+        <li>Email: support@hindleconsultants.com.au</li>
+        <li>Use Claude chat (🤖 button) for immediate platform questions</li>
+        <li>Check the Audit Trail for detailed event history</li>
+      </ul>
+    `
+  },
+]
+
+// ── HELP FUNCTIONS ──────────────────────────────────────────────────────────
+
+function toggleHelp(pageHint) {
+  HELP_OPEN = !HELP_OPEN
+  var panel = document.getElementById('help-panel')
+  var main  = document.querySelector('.main')
+  var btn   = document.getElementById('help-toggle-btn')
+
+  if (HELP_OPEN) {
+    panel.classList.add('open')
+    if (main) main.classList.add('help-open')
+    if (btn) btn.style.background = 'var(--teal-dim)'
+
+    // Context-aware: show relevant section for current page
+    var currentPage = S ? S.currentPage : ''
+    var catMap = {
+      dashboard: 'getting-started', pipeline: 'pipeline', dataload: 'data',
+      accounts: 'data', openitems: 'data', emailscanner: 'data',
+      exceptions: 'matching', reconciliation: 'matching', audit: 'governance',
+      approvals: 'governance', governance: 'governance', archive: 'erp',
+      reports: 'erp', erp: 'erp', onaccount: 'governance',
+      bankviewer: 'data', automation: 'automation',
+    }
+    var suggestedCat = pageHint || catMap[currentPage] || 'all'
+    helpRender(suggestedCat)
+    document.getElementById('help-search-input').value = ''
+
+    // Show context tip if we have a suggestion
+    if (suggestedCat !== 'all' && currentPage) {
+      helpSetContextTip(currentPage)
+    }
+  } else {
+    panel.classList.remove('open')
+    if (main) main.classList.remove('help-open')
+    if (btn) btn.style.background = ''
+  }
+}
+
+function helpSetContextTip(page) {
+  var tips = {
+    pipeline: 'Showing help for Visual Processing Pipeline',
+    automation: 'Showing help for Process Automation',
+    exceptions: 'Showing help for Exception handling and matching',
+    reconciliation: 'Showing help for the Allocation Panel',
+    governance: 'Showing help for Governance Rules',
+    erp: 'Showing help for ERP Export',
+    audit: 'Showing help for Audit Trail',
+    dataload: 'Showing help for loading data',
+    accounts: 'Showing help for Accounts (customer data)',
+    openitems: 'Showing help for Open Items (invoices)',
+    emailscanner: 'Showing help for Email Scanner',
+    archive: 'Showing help for Bank File Archive',
+    onaccount: 'Showing help for On Account Queue',
+    bankviewer: 'Showing help for Bank File Viewer',
+    approvals: 'Showing help for Approval Workflows',
+  }
+  var tip = tips[page]
+  if (!tip) return
+
+  var body = document.getElementById('help-body')
+  if (!body) return
+
+  var tipEl = document.createElement('div')
+  tipEl.className = 'help-context-tip'
+  tipEl.innerHTML = '<strong>📍 Context:</strong> ' + tip + ' — <a href="#" onclick="helpFilter(\'all\');return false" style="color:var(--teal-l)">Show all topics</a>'
+  body.insertBefore(tipEl, body.firstChild)
+}
+
+function helpFilter(cat) {
+  HELP_CURRENT_FILTER = cat
+  document.getElementById('help-search-input').value = ''
+  document.querySelectorAll('.help-nav-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().replace(/\s+/g,'-') === cat || (cat === 'all' && btn.textContent === 'All'))
+  })
+  helpRender(cat)
+}
+
+function helpSearch(query) {
+  helpRender(HELP_CURRENT_FILTER, query.trim().toLowerCase())
+}
+
+function helpRender(cat, query) {
+  var body = document.getElementById('help-body')
+  if (!body) return
+
+  var filtered = HELP_ARTICLES.filter(function(a) {
+    var matchCat = cat === 'all' || a.cat === cat
+    if (!query) return matchCat
+    var searchText = (a.title + ' ' + a.content).toLowerCase()
+    return matchCat && searchText.includes(query)
+  })
+
+  if (!filtered.length) {
+    body.innerHTML = '<div class="help-no-results">🔍 No articles found for "' + (query || cat) + '".<br><br><a href="#" onclick="helpFilter(\'all\');return false" style="color:var(--teal-l)">Browse all topics</a></div>'
+    return
+  }
+
+  // Group by category
+  var cats = {
+    'getting-started': { label: '🚀 Getting Started', articles: [] },
+    'pipeline': { label: '⊛ Pipeline & Processing', articles: [] },
+    'matching': { label: '⚡ Matching & Exceptions', articles: [] },
+    'data': { label: '📂 Data Management', articles: [] },
+    'automation': { label: '⚙ Automation', articles: [] },
+    'governance': { label: '⬛ Governance & Compliance', articles: [] },
+    'erp': { label: '⬢ ERP & Export', articles: [] },
+    'admin': { label: '🔧 Administration', articles: [] },
+  }
+
+  filtered.forEach(function(a) { if (cats[a.cat]) cats[a.cat].articles.push(a) })
+
+  var html = ''
+  Object.values(cats).forEach(function(section) {
+    if (!section.articles.length) return
+    html += '<div class="help-section"><div class="help-section-title">' + section.label + '</div>'
+    section.articles.forEach(function(a) {
+      html += '<div class="help-article" id="ha-' + a.id + '" onclick="helpToggle(\'' + a.id + '\')">'
+      html += '<div class="help-article-hdr">'
+      html += '<div class="help-article-icon" style="background:' + a.iconBg + '">' + a.icon + '</div>'
+      html += '<div class="help-article-title">' + a.title + '</div>'
+      if (a.badge) html += '<span class="help-article-badge" style="background:' + a.badgeBg + '20;color:' + a.badgeBg + ';border:1px solid ' + a.badgeBg + '40">' + a.badge + '</span>'
+      html += '<span class="help-article-chevron">›</span>'
+      html += '</div>'
+      html += '<div class="help-article-body">' + a.content + '</div>'
+      html += '</div>'
+    })
+    html += '</div>'
+  })
+
+  body.innerHTML = html
+}
+
+function helpToggle(id) {
+  var el = document.getElementById('ha-' + id)
+  if (!el) return
+  var isOpen = el.classList.contains('open')
+  // Close all
+  document.querySelectorAll('.help-article.open').forEach(function(a) { a.classList.remove('open') })
+  // Open this one if it was closed
+  if (!isOpen) {
+    el.classList.add('open')
+    // Scroll into view
+    setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }) }, 100)
+  }
+}
+
+// Open help to specific article directly
+function helpOpen(articleId) {
+  if (!HELP_OPEN) toggleHelp()
+  setTimeout(function() {
+    helpFilter('all')
+    setTimeout(function() { helpToggle(articleId) }, 200)
+  }, 100)
+}
+
+// Initialise help on load
+document.addEventListener('DOMContentLoaded', function() {
+  helpRender('all')
+})
+
 
 </script>
 
@@ -6253,7 +7522,7 @@ function renderDashboard(){
   <div class="cl-messages" id="cl-messages">
     <div class="cl-empty">
       <div class="cl-empty-icon">🤖</div>
-      <div class="cl-empty-title">Ask Claude anything</div>
+      <div class="cl-empty-title">Ask Claude anything</div><div style="font-size:10px;color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 8px;margin-bottom:8px">⚠ Requires a local server. Run: <code style="background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px">npx serve .</code> in the app folder, then open http://localhost:3000/cashflow-app.html</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Cash application · Bank formats · Automation · ERP · Deployment</div>
       <div class="cl-suggestions">
         <button class="cl-sug" onclick="clSuggest(this)">How do I configure SFTP file pickup?</button>
@@ -6265,9 +7534,7 @@ function renderDashboard(){
       </div>
     </div>
   </div>
-  <div id="cl-no-key-warning" class="cl-no-key" style="display:none">
-    ⚠ Running without Claude API — add ANTHROPIC_API_KEY to .env.local and restart the Next.js server, or use the built-in AI matching which uses the key server-side.
-  </div>
+
   <div class="cl-input-area">
     <div class="cl-input-row">
       <textarea class="cl-input" id="cl-input" placeholder="Ask about cash application, automation, deployment..." rows="1"
@@ -6276,6 +7543,41 @@ function renderDashboard(){
       <button class="cl-send" id="cl-send-btn" onclick="clSend()">↑</button>
     </div>
     <div class="cl-model">Powered by Anthropic Claude · Context-aware</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════ HELP PANEL ═══════════════════════ -->
+<div id="help-panel">
+  <div class="help-hdr">
+    <div class="help-hdr-icon">?</div>
+    <div>
+      <div class="help-hdr-title">Help & Documentation</div>
+      <div class="help-hdr-sub">CashFlow AI · Complete guide</div>
+    </div>
+    <button class="help-close" onclick="toggleHelp()">✕</button>
+  </div>
+  <div class="help-search-wrap">
+    <span class="help-search-icon">⌕</span>
+    <input class="help-search" id="help-search-input" placeholder="Search help articles..." oninput="helpSearch(this.value)" />
+  </div>
+  <div class="help-nav" id="help-nav">
+    <button class="help-nav-btn active" onclick="helpFilter('all')">All</button>
+    <button class="help-nav-btn" onclick="helpFilter('getting-started')">Getting Started</button>
+    <button class="help-nav-btn" onclick="helpFilter('pipeline')">Pipeline</button>
+    <button class="help-nav-btn" onclick="helpFilter('matching')">Matching</button>
+    <button class="help-nav-btn" onclick="helpFilter('data')">Data</button>
+    <button class="help-nav-btn" onclick="helpFilter('automation')">Automation</button>
+    <button class="help-nav-btn" onclick="helpFilter('governance')">Governance</button>
+    <button class="help-nav-btn" onclick="helpFilter('erp')">ERP & Export</button>
+    <button class="help-nav-btn" onclick="helpFilter('admin')">Admin</button>
+  </div>
+  <div class="help-body" id="help-body"></div>
+  <div class="help-footer">
+    <div class="help-footer-btns">
+      <button class="btn btn-ghost btn-sm" onclick="showPage('dashboard');toggleHelp()">← Dashboard</button>
+      <button class="btn btn-ghost btn-sm ml-auto" onclick="openModal('about-modal');initAboutModal()">About Platform</button>
+    </div>
   </div>
 </div>
 
