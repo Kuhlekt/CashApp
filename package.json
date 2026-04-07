@@ -7,7 +7,9 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "db:push": "prisma db push",
-    "db:seed": "npx tsx scripts/seed.ts"
+    "db:seed": "npx tsx scripts/seed.ts",
+    "db:seed-pricing": "npx tsx scripts/seed-pricing.ts",
+    "pricing:sync": "npx tsx scripts/seed-pricing.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",

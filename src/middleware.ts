@@ -1,29 +1,21 @@
-// src/middleware.ts - Production auth middleware
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'crypto'
 
 const PUBLIC_PATHS = [
   '/login', '/signup', '/landing', '/reset-password', '/accept-invite',
-  '/api/auth', '/api/health', '/api/orgs', '/api/billing/webhook',
+  '/api/auth', '/api/health', '/api/orgs', '/api/billing/webhook', '/api/claude',
   '/cashflow-app.html', '/_next', '/favicon.ico',
 ]
 
-// API routes that accept API key auth
 const API_KEY_PATHS = ['/api/accounts', '/api/openitems', '/api/allocations', '/api/batch']
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
-
-  // Always allow public paths
   if (PUBLIC_PATHS.some(p => path.startsWith(p))) return NextResponse.next()
 
-  // Check API key auth for integration endpoints
+  // API key auth for integration endpoints
   if (API_KEY_PATHS.some(p => path.startsWith(p))) {
     const apiKey = req.headers.get('x-api-key') ?? req.headers.get('authorization')?.replace('Bearer ', '')
-    if (apiKey?.startsWith('cfa_')) {
-      // Key format valid — route handler will verify against org settings
-      return NextResponse.next()
-    }
+    if (apiKey?.startsWith('cfa_')) return NextResponse.next()
   }
 
   // JWT session check
@@ -45,5 +37,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.ico$).*)'],
 }

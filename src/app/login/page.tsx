@@ -17,7 +17,7 @@ export default function LoginPage() {
       setError('Invalid email or password')
       setLoading(false)
     } else {
-      window.location.href = '/cashflow-app.html'
+      window.location.href = '/app'
     }
   }
 

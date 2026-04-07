@@ -505,3 +505,57 @@ model WebhookEvent {
   @@index([provider, processed])
   @@index([createdAt])
 }
+
+// ─── PRICING ENGINE ───────────────────────────────────────────────────────────
+model Plan {
+  id          String   @id @default(cuid())
+  code        String   @unique  // starter | professional | enterprise
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  maxUsers    Int      @default(10)
+  maxBatches  Int      @default(200)
+  features    Json     // array of feature strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prices      PlanPrice[]
+}
+
+model PlanPrice {
+  id            String   @id @default(cuid())
+  planId        String
+  stripePriceId String?  @unique  // set after creating in Stripe
+  currency      String   @default("AUD")  // AUD | USD | GBP | EUR | NZD
+  interval      String   @default("month") // month | year
+  amount        Int      // in cents
+  discountPct   Int      @default(0)  // annual discount %
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  plan          Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, currency, interval])
+  @@index([planId])
+  @@index([currency])
+}
+
+model PromoCode {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  stripeId      String?   // Stripe coupon/promo ID
+  discountType  String    @default("percent")  // percent | fixed
+  discountValue Int       // percent 0-100 or cents
+  currency      String?   // null = applies to all
+  maxRedemptions Int?
+  redemptions   Int       @default(0)
+  validFrom     DateTime  @default(now())
+  validUntil    DateTime?
+  active        Boolean   @default(true)
+  planCodes     String[]  // empty = all plans
+  createdAt     DateTime  @default(now())
+
+  @@index([code])
+  @@index([active])
+}

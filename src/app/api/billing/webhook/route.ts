@@ -1,5 +1,4 @@
 // src/app/api/billing/webhook/route.ts
-// Stripe webhook — handles subscription lifecycle
 
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '../../../../lib/db/client'
@@ -18,71 +17,84 @@ export async function POST(req: NextRequest) {
   let event
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
-  } catch (err) {
-    return NextResponse.json({ error: 'Webhook signature failed' }, { status: 400 })
+  } catch {
+    return NextResponse.json({ error: 'Webhook signature invalid' }, { status: 400 })
   }
 
-  // Store raw event
   await prisma.webhookEvent.create({
     data: { provider: 'stripe', eventType: event.type, payload: event as object },
   })
 
-  const PLAN_LOOKUP: Record<string, { plan: string; mrr: number; maxUsers: number; maxBatches: number }> = {
-    [process.env.STRIPE_PRICE_STARTER      ?? '']: { plan: 'starter',      mrr: 99,  maxUsers: 10,  maxBatches: 200 },
-    [process.env.STRIPE_PRICE_PROFESSIONAL ?? '']: { plan: 'professional', mrr: 349, maxUsers: 50,  maxBatches: 2000 },
-    [process.env.STRIPE_PRICE_ENTERPRISE   ?? '']: { plan: 'enterprise',   mrr: 999, maxUsers: 200, maxBatches: 20000 },
-  }
-
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as { metadata: { orgId: string; plan: string }; subscription: string; customer: string }
-        const { orgId, plan } = session.metadata
-        const planData = PLAN_LOOKUP[plan] ?? null
-        if (orgId && planData) {
-          await prisma.org.update({
-            where: { id: orgId },
-            data: {
-              plan: planData.plan,
-              status: 'active',
-              mrr: planData.mrr,
-              maxUsers: planData.maxUsers,
-              maxBatches: planData.maxBatches,
-              stripeSubId: session.subscription as string,
-              stripeCustomerId: session.customer as string,
-              trialEndsAt: null,
-            },
-          })
+        const session = event.data.object as {
+          metadata: { orgId: string; planCode: string }
+          subscription: string
+          customer: string
         }
+        const { orgId, planCode } = session.metadata
+        if (!orgId || !planCode) break
+
+        const plan = await prisma.plan.findUnique({ where: { code: planCode } })
+        if (!plan) break
+
+        await prisma.org.update({
+          where: { id: orgId },
+          data: {
+            plan: planCode,
+            status: 'active',
+            mrr: 0, // Will be updated by subscription.updated
+            maxUsers: plan.maxUsers,
+            maxBatches: plan.maxBatches,
+            stripeSubId: session.subscription as string,
+            stripeCustomerId: session.customer as string,
+            trialEndsAt: null,
+          },
+        })
         break
       }
 
       case 'customer.subscription.updated': {
-        const sub = event.data.object as { metadata: { orgId: string }; status: string; items: { data: Array<{ price: { id: string } }> } }
-        const orgId = sub.metadata?.orgId
-        if (orgId) {
-          const priceId = sub.items?.data?.[0]?.price?.id
-          const planData = priceId ? PLAN_LOOKUP[priceId] : null
-          await prisma.org.update({
-            where: { id: orgId },
-            data: {
-              status: sub.status === 'active' ? 'active' : 'suspended',
-              ...(planData ? { plan: planData.plan, mrr: planData.mrr, maxUsers: planData.maxUsers, maxBatches: planData.maxBatches } : {}),
-            },
-          })
+        const sub = event.data.object as {
+          metadata: { orgId: string; planCode: string; maxUsers: string; maxBatches: string }
+          status: string
+          items: { data: Array<{ price: { unit_amount: number; currency: string; recurring: { interval: string } } }> }
         }
+        const { orgId, planCode, maxUsers, maxBatches } = sub.metadata ?? {}
+        if (!orgId) break
+
+        const priceData = sub.items?.data?.[0]?.price
+        // Calculate MRR in cents, store as dollars
+        let mrr = 0
+        if (priceData?.unit_amount) {
+          mrr = priceData.recurring?.interval === 'year'
+            ? Math.round(priceData.unit_amount / 12 / 100)
+            : Math.round(priceData.unit_amount / 100)
+        }
+
+        await prisma.org.update({
+          where: { id: orgId },
+          data: {
+            status: sub.status === 'active' ? 'active' : 'suspended',
+            ...(planCode ? { plan: planCode } : {}),
+            ...(maxUsers ? { maxUsers: parseInt(maxUsers) } : {}),
+            ...(maxBatches ? { maxBatches: parseInt(maxBatches) } : {}),
+            ...(mrr ? { mrr } : {}),
+          },
+        })
         break
       }
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as { metadata: { orgId: string } }
-        const orgId = sub.metadata?.orgId
-        if (orgId) {
-          await prisma.org.update({
-            where: { id: orgId },
-            data: { status: 'cancelled', plan: 'trial', mrr: 0, stripeSubId: null },
-          })
-        }
+        const { orgId } = sub.metadata ?? {}
+        if (!orgId) break
+
+        await prisma.org.update({
+          where: { id: orgId },
+          data: { status: 'cancelled', plan: 'trial', mrr: 0, stripeSubId: null },
+        })
         break
       }
 
@@ -94,6 +106,15 @@ export async function POST(req: NextRequest) {
         }
         break
       }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as { customer: string; amount_paid: number; currency: string }
+        const org = await prisma.org.findFirst({ where: { stripeCustomerId: invoice.customer } })
+        if (org && org.status === 'suspended') {
+          await prisma.org.update({ where: { id: org.id }, data: { status: 'active' } })
+        }
+        break
+      }
     }
 
     await prisma.webhookEvent.updateMany({
@@ -101,10 +122,9 @@ export async function POST(req: NextRequest) {
       data: { processed: true, processedAt: new Date() },
     })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Processing error'
     await prisma.webhookEvent.updateMany({
       where: { provider: 'stripe', processed: false },
-      data: { error: msg },
+      data: { error: (err as Error).message },
     })
   }
 
