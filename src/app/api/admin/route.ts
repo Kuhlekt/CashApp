@@ -129,6 +129,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, promo })
   }
 
+  if (action === 'save-plan') {
+    const { id, name, description, maxUsers, maxBatches, features } = body
+    if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+    try {
+      const plan = await prisma.plan.update({
+        where: { id },
+        data: {
+          ...(name ? { name } : {}),
+          ...(description !== undefined ? { description } : {}),
+          ...(maxUsers ? { maxUsers: parseInt(maxUsers) } : {}),
+          ...(maxBatches ? { maxBatches: parseInt(maxBatches) } : {}),
+          ...(features ? { features: features as any } : {}),
+        },
+      })
+      return NextResponse.json({ ok: true, plan })
+    } catch (err) {
+      return NextResponse.json({ error: 'Failed: ' + (err as Error).message }, { status: 500 })
+    }
+  }
+
   if (action === 'test-email') {
     return NextResponse.json({ ok: true, message: 'Test email triggered — configure CLICKSEND_* env vars to send' })
   }

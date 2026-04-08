@@ -24,6 +24,7 @@ model Org {
   maxUsers        Int       @default(5)
   maxBatches      Int       @default(100)
   settings        Json?                          // org-level config overrides
+  planSnapshot    Json?                          // snapshot of plan limits at signup (grandfathering)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -516,6 +517,9 @@ model Plan {
   sortOrder   Int      @default(0)
   maxUsers    Int      @default(10)
   maxBatches  Int      @default(200)
+  baseUsdMonth      Int     @default(0)   // base USD monthly price in cents (anchor for all currencies)
+  baseUsdYear       Int     @default(0)   // base USD annual price in cents
+  annualDiscountPct Int     @default(20)  // % discount applied to annual billing (editable per plan)
   features    Json     // array of feature strings
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

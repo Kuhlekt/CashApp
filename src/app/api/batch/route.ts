@@ -3,25 +3,28 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '../../../lib/auth/config'
 import prisma from '../../../lib/db/client'
 import { auditLog } from '../../../lib/db/audit'
+import { checkBatchLimit, getOrgUsage } from '../../../lib/limits'
 
 export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
+  const view   = searchParams.get('view')
   const status = searchParams.get('status')
-  const limit = parseInt(searchParams.get('limit') ?? '20')
+  const limit  = parseInt(searchParams.get('limit') ?? '20')
+
+  // Usage stats view
+  if (view === 'usage') {
+    const usage = await getOrgUsage(session.user.orgId)
+    return NextResponse.json(usage)
+  }
 
   const sessions = await prisma.batchSession.findMany({
-    where: {
-      orgId: session.user.orgId,
-      ...(status ? { status } : {}),
-    },
+    where: { orgId: session.user.orgId, ...(status ? { status } : {}) },
     orderBy: { startedAt: 'desc' },
     take: Math.min(limit, 100),
-    include: {
-      _count: { select: { allocations: true } },
-    },
+    include: { _count: { select: { allocations: true } } },
   })
 
   return NextResponse.json(sessions)
@@ -53,26 +56,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(updated)
   }
 
-  if (action === 'complete' && sessionId) {
-    const updated = await prisma.batchSession.update({
-      where: { id: sessionId, orgId: session.user.orgId },
-      data: { status: 'complete', completedAt: new Date() },
+  if (action === 'create' || !action) {
+    // ── Enforce batch limit ──────────────────────────────────────────────────
+    const limitError = await checkBatchLimit(session.user.orgId)
+    if (limitError) return NextResponse.json({ error: limitError }, { status: 403 })
+
+    const sessionRef = `SESS-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`
+    const newSession = await prisma.batchSession.create({
+      data: {
+        orgId: session.user.orgId,
+        sessionRef,
+        status: 'open',
+        trigger: body.trigger ?? 'manual',
+        userId: session.user.id,
+        region: body.region,
+      },
     })
-    await auditLog({ orgId: session.user.orgId, sessionId, userId: session.user.id, category: 'user', event: 'BATCH_COMPLETED', message: 'Batch marked complete', actor: session.user.name })
-    return NextResponse.json(updated)
+    await auditLog({ orgId: session.user.orgId, sessionId: newSession.id, userId: session.user.id, category: 'system', event: 'BATCH_CREATED', message: `New batch session: ${sessionRef}`, actor: session.user.name })
+    return NextResponse.json(newSession, { status: 201 })
   }
 
-  // Create new session
-  const sessionRef = `SESS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
-  const newSession = await prisma.batchSession.create({
-    data: {
-      orgId: session.user.orgId,
-      sessionRef,
-      status: 'open',
-      trigger: 'manual',
-      userId: session.user.id,
-    },
-  })
-  await auditLog({ orgId: session.user.orgId, sessionId: newSession.id, userId: session.user.id, category: 'user', event: 'BATCH_START', message: `New batch session: ${sessionRef}`, actor: session.user.name })
-  return NextResponse.json(newSession, { status: 201 })
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
