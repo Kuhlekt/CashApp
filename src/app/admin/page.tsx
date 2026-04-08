@@ -956,5 +956,3 @@ function UsageMonitor({usage,s,C,planCol,onSave,showToast}:any){
   )
 }
 
-// FX reference needed in PlansEditor
-const FX:Record<string,number>={USD:1,AUD:1.55,NZD:1.65,GBP:0.78,EUR:0.92}
