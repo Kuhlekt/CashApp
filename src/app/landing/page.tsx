@@ -29,18 +29,41 @@ const FEATURES = [
 
 export default function LandingPage() {
   const [email, setEmail]           = useState('')
-  const [currency, setCurrency]     = useState('AUD')
-  const [interval, setInterval]     = useState<'month'|'year'>('month')
-  const [promo, setPromo]           = useState('')
-  const [promoMsg, setPromoMsg]     = useState('')
-  const [promoValid, setPromoValid] = useState(false)
+  const [currency, setCurrency]         = useState('AUD')
+  const [interval, setInterval]         = useState<'month'|'year'>('month')
+  const [promo, setPromo]               = useState('')
+  const [promoMsg, setPromoMsg]         = useState('')
+  const [promoValid, setPromoValid]     = useState(false)
   const [promoDiscount, setPromoDiscount] = useState(0)
-  const [checkingOut, setCheckingOut] = useState('')
+  const [checkingOut, setCheckingOut]   = useState('')
+  const [livePlans, setLivePlans]       = useState<any[]>([])
+  const [annualPct, setAnnualPct]       = useState(20) // platform-wide annual discount %
+
+  // Fetch live prices from API — updates whenever currency, interval or promo changes
+  useEffect(() => {
+    const params = new URLSearchParams({ currency, interval })
+    if (promoValid && promo) params.set('promo', promo.toUpperCase())
+    fetch(`/api/pricing?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.plans?.length) {
+          setLivePlans(data.plans)
+          // Get platform-wide annual discount from first plan that has it
+          const disc = data.plans[0]?.price?.discountPct
+          if (disc && disc > 0) setAnnualPct(disc)
+        }
+      })
+      .catch(() => {})
+  }, [currency, interval, promoValid, promo])
 
   const sym = CURRENCY_SYMBOLS[currency] ?? '$'
 
-  function getPrice(plan: typeof STATIC_PLANS[0]) {
-    const prices = plan.prices[currency as keyof typeof plan.prices] ?? plan.prices.AUD
+  function getPrice(planCode: string, staticPlan: typeof STATIC_PLANS[0]) {
+    // Use live API price if available
+    const liveEntry = livePlans.find(p => p.code === planCode)
+    if (liveEntry?.price?.amount) return Math.round(liveEntry.price.amount / 100)
+    // Fall back to static prices
+    const prices = staticPlan.prices[currency as keyof typeof staticPlan.prices] ?? staticPlan.prices.AUD
     const base = interval === 'year' ? prices.year : prices.month
     if (promoValid && promoDiscount > 0) return Math.round(base * (1 - promoDiscount / 100))
     return base
@@ -117,7 +140,7 @@ export default function LandingPage() {
           ✦ AI-powered cash application for accounts receivable teams
         </div>
         <h1 style={{ color:C.text1, fontSize:56, fontWeight:300, lineHeight:1.12, margin:'0 0 24px', letterSpacing:'-0.03em' }}>
-          Cash application<br /><span style={{ color:C.tealL }}>on autopilot</span>
+          <span style={{ color:C.tealL }}>AI-powered</span><br />cash application
         </h1>
         <p style={{ fontSize:19, color:C.text2, maxWidth:600, margin:'0 auto 44px', lineHeight:1.7 }}>
           AI matches bank transactions to invoices with 95%+ accuracy. Automated nightly runs. Direct ERP export to SAP, Oracle, NetSuite, or Xero.
@@ -139,7 +162,7 @@ export default function LandingPage() {
 
       {/* Features */}
       <section id="features" style={{ maxWidth:1100, margin:'0 auto', padding:'80px 40px' }}>
-        <h2 style={{ textAlign:'center', color:C.text1, fontSize:36, fontWeight:300, margin:'0 0 56px' }}>Everything your AR team needs</h2>
+        <h2 style={{ textAlign:'center', color:C.text1, fontSize:36, fontWeight:300, margin:'0 0 56px' }}>AI that works while your team sleeps</h2>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
           {FEATURES.map(f => (
             <div key={f.title} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, padding:24 }}>
@@ -169,7 +192,7 @@ export default function LandingPage() {
             {(['month','year'] as const).map(iv => (
               <button key={iv} onClick={() => setInterval(iv)}
                 style={{ background:interval===iv ? C.teal : 'transparent', border:'none', borderRadius:7, padding:'7px 18px', color:interval===iv ? 'white' : C.text3, fontSize:13, fontWeight:interval===iv ? 700 : 400, cursor:'pointer' }}>
-                {iv === 'month' ? 'Monthly' : <>Annual <span style={{ background:'#4ADE8020', border:'1px solid #4ADE8040', borderRadius:10, padding:'1px 7px', fontSize:10, color:'#4ADE80' }}>Save 20%</span></>}
+                {iv === 'month' ? 'Monthly' : <span>Annual <span style={{ background:'#4ADE8020', border:'1px solid #4ADE8040', borderRadius:10, padding:'1px 7px', fontSize:10, color:'#4ADE80', marginLeft:4 }}>Save {annualPct}%</span></span>}
               </button>
             ))}
           </div>
@@ -191,7 +214,7 @@ export default function LandingPage() {
           {STATIC_PLANS.map(plan => {
             const isPopular = plan.code === 'professional'
             const isEnt = plan.code === 'enterprise'
-            const price = getPrice(plan)
+            const price = getPrice(plan.code, plan)
             return (
               <div key={plan.code} style={{ background:isPopular ? 'rgba(14,165,160,0.08)' : C.surface, border:`2px solid ${isPopular ? C.teal : C.border}`, borderRadius:14, padding:28, position:'relative' }}>
                 {isPopular && <div style={{ position:'absolute', top:-13, left:'50%', transform:'translateX(-50%)', background:C.teal, color:'white', fontSize:11, fontWeight:700, padding:'4px 16px', borderRadius:20, whiteSpace:'nowrap' }}>MOST POPULAR</div>}
@@ -207,7 +230,7 @@ export default function LandingPage() {
                       <span style={{ color:C.text1, fontSize:40, fontWeight:700, lineHeight:1 }}>{sym}{price}</span>
                       <span style={{ color:C.text3, fontSize:14 }}>/{interval === 'year' ? 'yr' : 'mo'}</span>
                     </div>
-                    {interval === 'year' && <div style={{ color:'#4ADE80', fontSize:12, marginBottom:4 }}>{sym}{plan.prices[currency as keyof typeof plan.prices]?.month ?? 0}/mo equivalent · Save 20%</div>}
+                    {interval === 'year' && <div style={{ color:'#4ADE80', fontSize:12, marginBottom:4 }}>{sym}{Math.round(price/12*10)/10}/mo equivalent · Save {annualPct}%</div>}
                     {promoValid && <div style={{ color:'#F59E0B', fontSize:12, marginBottom:4 }}>🎟 Promo applied</div>}
                   </>
                 )}
@@ -240,7 +263,7 @@ export default function LandingPage() {
           { q:"Can I change plans?", a:"Yes — upgrade or downgrade anytime. Upgrades take effect immediately, downgrades at next billing cycle via the Stripe billing portal." },
           { q:"Do you offer annual billing?", a:"Yes — save 20% paying annually. Switch between monthly and annual anytime via your billing portal." },
           { q:"What ERP systems do you support?", a:"SAP (FIDCC2 IDOC), Oracle AR (AutoLockbox), NetSuite, Xero, and generic CSV/JSON. Custom connectors on Enterprise." },
-          { q:"Is my financial data secure?", a:"Yes. AES-256 encryption at rest, TLS 1.3 in transit, full org isolation, SHA-256 tamper-evident audit chain. Australian data residency (Vercel syd1)." },
+          { q:"Is my financial data secure?", a:"Yes. AES-256 encryption at rest, TLS 1.3 in transit, full org isolation, SHA-256 tamper-evident audit chain. Global deployment via Vercel edge network." },
           { q:"What bank file formats do you support?", a:"MT940, CAMT.053 (ISO 20022), BAI2, and custom CSV with a mapping profile builder." },
         ].map(faq => (
           <details key={faq.q} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, marginBottom:8, overflow:'hidden' }}>
