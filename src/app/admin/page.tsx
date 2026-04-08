@@ -61,6 +61,7 @@ const NAV=[
   {id:'trials',icon:'⏱',label:'Trial Monitor'},
   {id:'audit',icon:'◈',label:'Audit Log'},
   {id:'notifications',icon:'✉',label:'Notifications'},
+  {id:'usage',icon:'📊',label:'Usage Monitor'},
   {id:'monitoring',icon:'⚡',label:'Monitoring'},
 ]
 
@@ -72,6 +73,7 @@ export default function AdminPage() {
   const [audit,setAudit]=useState<AuditEntry[]>([])
   const [promos,setPromos]=useState<PromoCode[]>([])
   const [plans,setPlans]=useState<Plan[]>([])
+  const [usage,setUsage]=useState<any[]>([])
   const [loading,setLoading]=useState(false)
   const [accessErr,setAccessErr]=useState(false)
   const [editing,setEditing]=useState<any>(null)
@@ -95,6 +97,7 @@ export default function AdminPage() {
       if(v==='audit'){const d=await fetch('/api/admin?view=audit').then(r=>r.json());setAudit(d.logs??[])}
       if(v==='promos'){const d=await fetch('/api/admin?view=promos').then(r=>r.json());setPromos(d.promos??[])}
       if(v==='plans'){const d=await fetch('/api/admin/plans').then(r=>r.json());setPlans(d.plans??[])}
+      if(v==='usage'){const d=await fetch('/api/admin?view=usage').then(r=>r.json());setUsage(d.usage??[])}
     } catch(e){showToast('Load error: '+(e as Error).message)}
     setLoading(false)
   },[view,showToast])
@@ -174,6 +177,7 @@ export default function AdminPage() {
         <div style={{padding:'12px 16px',borderTop:`1px solid ${C.bdr}`,display:'flex',flexDirection:'column',gap:6}}>
           <a href="/app" style={{color:C.t3,fontSize:12,textDecoration:'none'}}>← Back to app</a>
           <a href="/landing" style={{color:C.t3,fontSize:12,textDecoration:'none'}}>← Landing page</a>
+          <div style={{color:'rgba(136,153,184,0.4)',fontSize:10,fontFamily:'monospace',marginTop:4,letterSpacing:'0.05em'}}>b20260408-001</div>
         </div>
       </nav>
 
@@ -303,6 +307,9 @@ export default function AdminPage() {
 
         {/* NOTIFICATIONS */}
         {view==='notifications'&&<NotificationsPanel s={s} C={C} showToast={showToast}/>}
+
+        {/* USAGE MONITOR */}
+        {view==='usage'&&<UsageMonitor usage={usage} s={s} C={C} planCol={planCol} onSave={saveOrg} showToast={showToast}/>}
 
         {/* MONITORING */}
         {view==='monitoring'&&<MonitoringPanel s={s} C={C}/>}
@@ -831,6 +838,119 @@ function MonitoringPanel({s,C}:any){
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+
+// ── Usage Monitor ─────────────────────────────────────────────────────────────
+function UsageMonitor({usage,s,C,planCol,onSave,showToast}:any){
+  const [editingLimits,setEditingLimits]=useState<string|null>(null)
+  const [limitForm,setLimitForm]=useState<{maxUsers:number,maxBatches:number}>({maxUsers:0,maxBatches:0})
+
+  function UsageBar({value,max,color}:any){
+    const pct=max>=999999?0:Math.min(100,Math.round(value/max*100))
+    const barColor=pct>=90?C.red:pct>=70?C.amber:color??C.teal
+    return(
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{flex:1,height:6,background:'rgba(50,77,114,0.4)',borderRadius:3,overflow:'hidden'}}>
+          <div style={{width:`${max>=999999?5:pct}%`,height:'100%',background:barColor,borderRadius:3,transition:'width 0.3s'}}/>
+        </div>
+        <span style={{fontSize:11,fontFamily:'monospace',color:barColor,minWidth:60,textAlign:'right'}}>
+          {max>=999999?`${value} / ∞`:`${value} / ${max}`}
+        </span>
+        {max<999999&&<span style={{fontSize:10,color:pct>=90?C.red:pct>=70?C.amber:C.t3,minWidth:32}}>{pct}%</span>}
+      </div>
+    )
+  }
+
+  return(
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          {l:'Total Orgs',v:usage.length,c:C.t1},
+          {l:'At User Limit',v:usage.filter((u:any)=>u.userPct>=100).length,c:C.red},
+          {l:'Near User Limit (>80%)',v:usage.filter((u:any)=>u.userPct>=80&&u.userPct<100).length,c:C.amber},
+          {l:'Near Batch Limit (>80%)',v:usage.filter((u:any)=>u.batchPct>=80&&u.batchPct<100).length,c:C.amber},
+        ].map(k=>(
+          <div key={k.l} style={{...s.kpi}}>
+            <div style={{fontSize:9,textTransform:'uppercase',letterSpacing:'0.1em',color:C.t3,marginBottom:6}}>{k.l}</div>
+            <div style={{fontSize:24,fontWeight:700,color:k.c}}>{k.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={s.card}>
+        <div style={s.hdr}>
+          <span style={{color:C.t1,fontWeight:600,fontSize:13}}>Organisation Usage — {new Date().toLocaleString('default',{month:'long',year:'numeric'})}</span>
+          <span style={{color:C.t3,fontSize:11}}>Click limits to edit</span>
+        </div>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr>
+              {['Organisation','Plan','Users (vs limit)','Batch Runs (vs limit)','User Limit','Batch Limit','Actions'].map(h=><th key={h} style={s.th}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {usage.map((org:any)=>(
+              <tr key={org.id}>
+                <td style={{...s.td,color:C.t1,fontWeight:500}}>
+                  <div>{org.name}</div>
+                  <div style={{fontSize:10,color:C.t3,fontFamily:'monospace'}}>{org.slug}</div>
+                </td>
+                <td style={s.td}>
+                  <span style={{background:`${planCol[org.plan]??C.t3}20`,border:`1px solid ${planCol[org.plan]??C.t3}40`,borderRadius:12,padding:'2px 9px',fontSize:11,color:planCol[org.plan]??C.t3,fontWeight:700}}>{org.plan}</span>
+                </td>
+                <td style={{...s.td,minWidth:200}}>
+                  <UsageBar value={org.usage.users} max={org.maxUsers} color={C.teal}/>
+                </td>
+                <td style={{...s.td,minWidth:200}}>
+                  <UsageBar value={org.usage.batches} max={org.maxBatches} color={C.purple}/>
+                </td>
+                <td style={s.td}>
+                  {editingLimits===org.id?(
+                    <input type="number" value={limitForm.maxUsers} onChange={e=>setLimitForm(f=>({...f,maxUsers:parseInt(e.target.value)||1}))}
+                      style={{...s.inp,width:70,padding:'4px 8px',fontSize:12}} autoFocus/>
+                  ):(
+                    <span onClick={()=>{setEditingLimits(org.id);setLimitForm({maxUsers:org.maxUsers,maxBatches:org.maxBatches})}}
+                      style={{cursor:'pointer',color:C.t1,fontFamily:'monospace',borderBottom:`1px dashed ${C.bdr}`,fontSize:13}}
+                      title="Click to edit">{org.maxUsers} users</span>
+                  )}
+                </td>
+                <td style={s.td}>
+                  {editingLimits===org.id?(
+                    <input type="number" value={limitForm.maxBatches>=999999?'':limitForm.maxBatches}
+                      placeholder="999999=∞"
+                      onChange={e=>setLimitForm(f=>({...f,maxBatches:parseInt(e.target.value)||20}))}
+                      style={{...s.inp,width:80,padding:'4px 8px',fontSize:12}}/>
+                  ):(
+                    <span onClick={()=>{setEditingLimits(org.id);setLimitForm({maxUsers:org.maxUsers,maxBatches:org.maxBatches})}}
+                      style={{cursor:'pointer',color:C.t1,fontFamily:'monospace',borderBottom:`1px dashed ${C.bdr}`,fontSize:13}}
+                      title="Click to edit">{org.maxBatches>=999999?'∞':org.maxBatches} runs</span>
+                  )}
+                </td>
+                <td style={s.td}>
+                  {editingLimits===org.id?(
+                    <div style={{display:'flex',gap:5}}>
+                      <button style={{...s.btn(C.teal),padding:'4px 10px'}} onClick={async()=>{
+                        await onSave(org.id,{maxUsers:limitForm.maxUsers,maxBatches:limitForm.maxBatches})
+                        setEditingLimits(null)
+                        // Reload usage
+                        const d=await fetch('/api/admin?view=usage').then(r=>r.json())
+                        showToast('✓ Limits updated')
+                      }}>Save</button>
+                      <button style={{...s.btn('transparent',C.bdr),padding:'4px 10px'}} onClick={()=>setEditingLimits(null)}>✕</button>
+                    </div>
+                  ):(
+                    <button style={s.btn(C.sur2,C.bdr)} onClick={()=>{setEditingLimits(org.id);setLimitForm({maxUsers:org.maxUsers,maxBatches:org.maxBatches})}}>Edit limits</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {usage.length===0&&<tr><td colSpan={7} style={{...s.td,textAlign:'center',color:C.t3,padding:32}}>No organisations yet</td></tr>}
+          </tbody>
+        </table>
       </div>
     </div>
   )
