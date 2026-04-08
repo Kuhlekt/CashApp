@@ -770,31 +770,60 @@ function TrialMonitor({orgs,s,C,planCol,fmtDate,tdLeft,onExtend}:any){
 
 // ── Notifications Panel ───────────────────────────────────────────────────────
 function NotificationsPanel({s,C,showToast}:any){
+  const CS_VARS = [
+    {key:'CLICKSEND_USERNAME', label:'Username (email)'},
+    {key:'CLICKSEND_API_KEY', label:'API Key'},
+    {key:'CLICKSEND_FROM_NAME', label:'From Name'},
+    {key:'CLICKSEND_FROM_EMAIL', label:'From Email'},
+    {key:'CLICKSEND_EMAIL_ADDRESS_ID', label:'Email Address ID'},
+  ]
+  const EVENTS = [
+    {icon:'✓', event:'Batch complete', desc:'Automation run finished'},
+    {icon:'⚠', event:'Exception alert', desc:'Exceptions need review'},
+    {icon:'✦', event:'Approval required', desc:'High-value sign-off'},
+    {icon:'⬢', event:'ERP export ready', desc:'File ready to post'},
+    {icon:'⏱', event:'Trial expiry', desc:'At 7, 3, 1 days'},
+    {icon:'💳', event:'Payment failed', desc:'Stripe payment failure'},
+  ]
+  async function testEmail() {
+    try {
+      const r = await fetch('/api/notifications', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'test-email'})})
+      const d = await r.json()
+      showToast(d.ok ? '✓ Test email sent' : '✗ ' + (d.error ?? 'Failed'))
+    } catch(e) { showToast('✗ Network error') }
+  }
+  async function testSMS() {
+    try {
+      const r = await fetch('/api/notifications', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'test-sms'})})
+      const d = await r.json()
+      showToast(d.ok ? '✓ SMS sent' : '✗ ' + (d.error ?? 'Failed'))
+    } catch(e) { showToast('✗ Network error') }
+  }
   return(
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
       <div style={s.card}>
         <div style={s.hdr}><span style={{color:C.t1,fontWeight:600,fontSize:13}}>✉ ClickSend Config</span></div>
         <div style={s.body}>
           <p style={{color:C.t3,fontSize:12,marginBottom:16}}>Set in Vercel → Settings → Environment Variables. Known sender IDs: 6504, 6798, 6832, 7227, 7559, 32709</p>
-          {[['CLICKSEND_USERNAME','Username (email)'],['CLICKSEND_API_KEY','API Key'],['CLICKSEND_FROM_NAME','From Name'],['CLICKSEND_FROM_EMAIL','From Email'],['CLICKSEND_EMAIL_ADDRESS_ID','Email Address ID']].map(([k,l])=>(
-            <div key={k} style={{marginBottom:10}}>
-              <label style={s.lbl}>{l}</label>
-              <div style={{...s.inp,color:C.t3,fontSize:12,fontFamily:'monospace'}}>{k}</div>
+          {CS_VARS.map(v=>(
+            <div key={v.key} style={{marginBottom:10}}>
+              <label style={s.lbl}>{v.label}</label>
+              <div style={{...s.inp,color:C.t3,fontSize:12,fontFamily:'monospace'}}>{v.key}</div>
             </div>
           ))}
           <div style={{display:'flex',gap:8,marginTop:16}}>
-            <button style={s.btn(C.sur2,C.bdr)} onClick={async()=>{const r=await fetch('/api/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'test-email'})});const d=await r.json();showToast(d.ok?'✓ Test email sent':'✗ '+(d.error??'Failed'))}}>Test Email</button>
-            <button style={s.btn(C.sur2,C.bdr)} onClick={async()=>{const r=await fetch('/api/notifications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'test-sms'})});const d=await r.json();showToast(d.ok?'✓ SMS sent':'✗ '+(d.error??'Failed'))}}>Test SMS</button>
+            <button style={s.btn(C.sur2,C.bdr)} onClick={testEmail}>Test Email</button>
+            <button style={s.btn(C.sur2,C.bdr)} onClick={testSMS}>Test SMS</button>
           </div>
         </div>
       </div>
       <div style={s.card}>
         <div style={s.hdr}><span style={{color:C.t1,fontWeight:600,fontSize:13}}>📋 Event Triggers</span></div>
         <div style={s.body}>
-          {[{i:'✓',e:'Batch complete',d:'Automation run finished'},{i:'⚠',e:'Exception alert',d:'Exceptions need review'},{i:'✦',e:'Approval required',d:'High-value sign-off'},{i:'⬢',e:'ERP export ready',d:'File ready to post'},{i:'⏱',e:'Trial expiry',d:'At 7, 3, 1 days'},{i:'💳',e:'Payment failed',d:'Stripe payment failure'}].map(n=>(
-            <div key={n.e} style={{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:'1px solid rgba(50,77,114,0.3)'}}>
-              <span style={{fontSize:16,width:24}}>{n.i}</span>
-              <div style={{flex:1}}><div style={{color:C.t1,fontSize:13,fontWeight:500}}>{n.e}</div><div style={{color:C.t3,fontSize:11}}>{n.d}</div></div>
+          {EVENTS.map(n=>(
+            <div key={n.event} style={{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:'1px solid rgba(50,77,114,0.3)'}}>
+              <span style={{fontSize:16,width:24}}>{n.icon}</span>
+              <div style={{flex:1}}><div style={{color:C.t1,fontSize:13,fontWeight:500}}>{n.event}</div><div style={{color:C.t3,fontSize:11}}>{n.desc}</div></div>
               <div style={{width:8,height:8,borderRadius:'50%',background:C.green}}></div>
             </div>
           ))}
