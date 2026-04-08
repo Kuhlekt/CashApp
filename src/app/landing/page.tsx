@@ -114,7 +114,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section style={{ maxWidth:1100, margin:'0 auto', padding:'100px 40px 80px', textAlign:'center' }}>
         <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:`${C.teal}15`, border:`1px solid ${C.teal}30`, borderRadius:20, padding:'6px 16px', fontSize:12, color:C.tealL, marginBottom:28, fontWeight:600 }}>
-          ✦ Purpose-built for ANZ accounts receivable teams
+          ✦ AI-powered cash application for accounts receivable teams
         </div>
         <h1 style={{ color:C.text1, fontSize:56, fontWeight:300, lineHeight:1.12, margin:'0 0 24px', letterSpacing:'-0.03em' }}>
           Cash application<br /><span style={{ color:C.tealL }}>on autopilot</span>
@@ -254,7 +254,7 @@ export default function LandingPage() {
       <section style={{ maxWidth:1100, margin:'0 auto', padding:'40px 40px 80px' }}>
         <div style={{ background:`rgba(14,165,160,0.08)`, border:`1px solid ${C.teal}40`, borderRadius:20, padding:'64px 48px', textAlign:'center' }}>
           <h2 style={{ color:C.text1, fontSize:36, fontWeight:300, margin:'0 0 16px' }}>Start automating your cash application today</h2>
-          <p style={{ color:C.text3, fontSize:16, marginBottom:36 }}>Join AR teams across Australia and New Zealand.</p>
+          <p style={{ color:C.text3, fontSize:16, marginBottom:36 }}>Trusted by accounts receivable teams worldwide.</p>
           <div style={{ display:'flex', gap:14, justifyContent:'center' }}>
             <a href="/signup" style={{ background:C.teal, color:'white', textDecoration:'none', padding:'14px 36px', borderRadius:10, fontSize:16, fontWeight:700 }}>Start free trial →</a>
             <a href="mailto:sales@hindleconsultants.com.au" style={{ background:'transparent', color:C.text2, textDecoration:'none', padding:'14px 32px', borderRadius:10, fontSize:16, border:`1px solid ${C.border}` }}>Talk to sales</a>
