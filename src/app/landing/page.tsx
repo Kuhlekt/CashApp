@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 
@@ -16,54 +16,31 @@ const STATIC_PLANS = [
     prices:{ AUD:{month:999,year:799}, USD:{month:699,year:559}, NZD:{month:1199,year:959}, GBP:{month:499,year:399}, EUR:{month:599,year:479} } },
 ]
 
-const CURRENCY_SYMBOLS:Record<string,string> = { AUD:'A$', USD:'$', NZD:'NZ$', GBP:'£', EUR:'€' }
+const CURRENCY_SYMBOLS:Record<string,string> = { AUD:'A$', USD:'$', NZD:'NZ$', GBP:'Â£', EUR:'â‚¬' }
 const CURRENCIES = ['AUD','USD','NZD','GBP','EUR']
 const FEATURES = [
-  { icon:'⊛', title:'AI-Powered Matching', desc:'Claude AI matches bank transactions to invoices with 95%+ accuracy. ML learns from every confirmation.' },
-  { icon:'⚙', title:'Fully Automated', desc:'Schedule nightly runs via SFTP, URL, or S3. Process, match, and deliver to your ERP while you sleep.' },
-  { icon:'◈', title:'Governed & Auditable', desc:'SHA-256 hash chain on every event. Dual approval, threshold controls, immutable audit trail.' },
-  { icon:'⬢', title:'ERP Integration', desc:'SAP IDOC, Oracle AR, NetSuite, Xero, CSV. Deliver via SFTP, S3, or REST API.' },
-  { icon:'◉', title:'Multi-Region', desc:'Route debtors by region — NSW, VIC, QLD, NZ. Separate accounts and currencies per region.' },
-  { icon:'✉', title:'Smart Notifications', desc:'ClickSend email and SMS on batch completion, exceptions, approvals and ERP readiness.' },
+  { icon:'âŠ›', title:'AI-Powered Matching', desc:'Claude AI matches bank transactions to invoices with 95%+ accuracy. ML learns from every confirmation.' },
+  { icon:'âš™', title:'Fully Automated', desc:'Schedule nightly runs via SFTP, URL, or S3. Process, match, and deliver to your ERP while you sleep.' },
+  { icon:'â—ˆ', title:'Governed & Auditable', desc:'SHA-256 hash chain on every event. Dual approval, threshold controls, immutable audit trail.' },
+  { icon:'â¬¢', title:'ERP Integration', desc:'SAP IDOC, Oracle AR, NetSuite, Xero, CSV. Deliver via SFTP, S3, or REST API.' },
+  { icon:'â—‰', title:'Multi-Region', desc:'Route debtors by region â€” NSW, VIC, QLD, NZ. Separate accounts and currencies per region.' },
+  { icon:'âœ‰', title:'Smart Notifications', desc:'ClickSend email and SMS on batch completion, exceptions, approvals and ERP readiness.' },
 ]
 
 export default function LandingPage() {
   const [email, setEmail]           = useState('')
-  const [currency, setCurrency]         = useState('AUD')
-  const [interval, setInterval]         = useState<'month'|'year'>('month')
-  const [promo, setPromo]               = useState('')
-  const [promoMsg, setPromoMsg]         = useState('')
-  const [promoValid, setPromoValid]     = useState(false)
+  const [currency, setCurrency]     = useState('AUD')
+  const [interval, setInterval]     = useState<'month'|'year'>('month')
+  const [promo, setPromo]           = useState('')
+  const [promoMsg, setPromoMsg]     = useState('')
+  const [promoValid, setPromoValid] = useState(false)
   const [promoDiscount, setPromoDiscount] = useState(0)
-  const [checkingOut, setCheckingOut]   = useState('')
-  const [livePlans, setLivePlans]       = useState<any[]>([])
-  const [annualPct, setAnnualPct]       = useState(20) // platform-wide annual discount %
-
-  // Fetch live prices from API — updates whenever currency, interval or promo changes
-  useEffect(() => {
-    const params = new URLSearchParams({ currency, interval })
-    if (promoValid && promo) params.set('promo', promo.toUpperCase())
-    fetch(`/api/pricing?${params}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.plans?.length) {
-          setLivePlans(data.plans)
-          // Get platform-wide annual discount from first plan that has it
-          const disc = data.plans[0]?.price?.discountPct
-          if (disc && disc > 0) setAnnualPct(disc)
-        }
-      })
-      .catch(() => {})
-  }, [currency, interval, promoValid, promo])
+  const [checkingOut, setCheckingOut] = useState('')
 
   const sym = CURRENCY_SYMBOLS[currency] ?? '$'
 
-  function getPrice(planCode: string, staticPlan: typeof STATIC_PLANS[0]) {
-    // Use live API price if available
-    const liveEntry = livePlans.find(p => p.code === planCode)
-    if (liveEntry?.price?.amount) return Math.round(liveEntry.price.amount / 100)
-    // Fall back to static prices
-    const prices = staticPlan.prices[currency as keyof typeof staticPlan.prices] ?? staticPlan.prices.AUD
+  function getPrice(plan: typeof STATIC_PLANS[0]) {
+    const prices = plan.prices[currency as keyof typeof plan.prices] ?? plan.prices.AUD
     const base = interval === 'year' ? prices.year : prices.month
     if (promoValid && promoDiscount > 0) return Math.round(base * (1 - promoDiscount / 100))
     return base
@@ -77,7 +54,7 @@ export default function LandingPage() {
         const d = await res.json()
         if (d.promo?.valid) {
           setPromoValid(true)
-          setPromoMsg(`✓ ${promo.toUpperCase()} applied`)
+          setPromoMsg(`âœ“ ${promo.toUpperCase()} applied`)
           setPromoDiscount(20) // Will be overridden by actual discount from API
         } else {
           setPromoValid(false); setPromoMsg('Invalid promo code')
@@ -86,7 +63,7 @@ export default function LandingPage() {
         const d = await res.json()
         setPromoValid(false); setPromoMsg(d.error ?? 'Invalid promo code')
       }
-    } catch { setPromoMsg('Could not validate — try at checkout') }
+    } catch { setPromoMsg('Could not validate â€” try at checkout') }
   }
 
   async function handleCheckout(planCode: string) {
@@ -103,7 +80,7 @@ export default function LandingPage() {
         const d = await res.json()
         if (d.url) { window.location.href = d.url; return }
       }
-      // Not logged in — go to signup with plan params
+      // Not logged in â€” go to signup with plan params
       const params = new URLSearchParams({ plan: planCode, currency, interval })
       if (promoValid) params.set('promo', promo.toUpperCase())
       window.location.href = `/signup?${params}`
@@ -121,7 +98,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav style={{ position:'sticky', top:0, zIndex:100, background:'rgba(6,10,20,0.95)', backdropFilter:'blur(12px)', borderBottom:`1px solid ${C.border}`, padding:'0 40px', height:64, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:22 }}>⬡</span>
+          <span style={{ fontSize:22 }}>â¬¡</span>
           <span style={{ color:C.text1, fontWeight:700, fontSize:17 }}>CashFlow AI</span>
           <span style={{ background:`${C.teal}20`, border:`1px solid ${C.teal}40`, borderRadius:20, padding:'2px 10px', fontSize:10, color:C.tealL, fontWeight:700 }}>BY HINDLE CONSULTANTS</span>
         </div>
@@ -137,10 +114,10 @@ export default function LandingPage() {
       {/* Hero */}
       <section style={{ maxWidth:1100, margin:'0 auto', padding:'100px 40px 80px', textAlign:'center' }}>
         <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:`${C.teal}15`, border:`1px solid ${C.teal}30`, borderRadius:20, padding:'6px 16px', fontSize:12, color:C.tealL, marginBottom:28, fontWeight:600 }}>
-          ✦ AI-powered cash application for accounts receivable teams
+          âœ¦ AI-powered cash application for accounts receivable teams
         </div>
         <h1 style={{ color:C.text1, fontSize:56, fontWeight:300, lineHeight:1.12, margin:'0 0 24px', letterSpacing:'-0.03em' }}>
-          <span style={{ color:C.tealL }}>AI-powered</span><br />cash application
+          Cash application<br /><span style={{ color:C.tealL }}>on autopilot</span>
         </h1>
         <p style={{ fontSize:19, color:C.text2, maxWidth:600, margin:'0 auto 44px', lineHeight:1.7 }}>
           AI matches bank transactions to invoices with 95%+ accuracy. Automated nightly runs. Direct ERP export to SAP, Oracle, NetSuite, or Xero.
@@ -149,10 +126,10 @@ export default function LandingPage() {
           style={{ display:'flex', gap:10, maxWidth:440, margin:'0 auto 20px', justifyContent:'center' }}>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@company.com" required style={{ ...inp, flex:1 }} />
           <button type="submit" style={{ background:C.teal, border:'none', borderRadius:10, padding:'11px 24px', color:'white', fontSize:15, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
-            Start free →
+            Start free â†’
           </button>
         </form>
-        <div style={{ color:C.text3, fontSize:13 }}>14-day free trial · No credit card required · Cancel anytime</div>
+        <div style={{ color:C.text3, fontSize:13 }}>14-day free trial Â· No credit card required Â· Cancel anytime</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:24, maxWidth:720, margin:'64px auto 0' }}>
           {[{ v:'95%+', l:'Auto-match rate' },{ v:'$2.4M', l:'Avg cash applied/day' },{ v:'< 2s', l:'Per transaction' },{ v:'100%', l:'Audit coverage' }].map(s => (
             <div key={s.l}><div style={{ color:C.tealL, fontSize:34, fontWeight:700, fontFamily:'monospace' }}>{s.v}</div><div style={{ color:C.text3, fontSize:13, marginTop:4 }}>{s.l}</div></div>
@@ -162,7 +139,7 @@ export default function LandingPage() {
 
       {/* Features */}
       <section id="features" style={{ maxWidth:1100, margin:'0 auto', padding:'80px 40px' }}>
-        <h2 style={{ textAlign:'center', color:C.text1, fontSize:36, fontWeight:300, margin:'0 0 56px' }}>AI that works while your team sleeps</h2>
+        <h2 style={{ textAlign:'center', color:C.text1, fontSize:36, fontWeight:300, margin:'0 0 56px' }}>Everything your AR team needs</h2>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
           {FEATURES.map(f => (
             <div key={f.title} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, padding:24 }}>
@@ -192,7 +169,7 @@ export default function LandingPage() {
             {(['month','year'] as const).map(iv => (
               <button key={iv} onClick={() => setInterval(iv)}
                 style={{ background:interval===iv ? C.teal : 'transparent', border:'none', borderRadius:7, padding:'7px 18px', color:interval===iv ? 'white' : C.text3, fontSize:13, fontWeight:interval===iv ? 700 : 400, cursor:'pointer' }}>
-                {iv === 'month' ? 'Monthly' : <span>Annual <span style={{ background:'#4ADE8020', border:'1px solid #4ADE8040', borderRadius:10, padding:'1px 7px', fontSize:10, color:'#4ADE80', marginLeft:4 }}>Save {annualPct}%</span></span>}
+                {iv === 'month' ? 'Monthly' : <>Annual <span style={{ background:'#4ADE8020', border:'1px solid #4ADE8040', borderRadius:10, padding:'1px 7px', fontSize:10, color:'#4ADE80' }}>Save 20%</span></>}
               </button>
             ))}
           </div>
@@ -203,7 +180,7 @@ export default function LandingPage() {
               placeholder="Promo code" style={{ ...inp, padding:'8px 12px', width:130, fontSize:13 }} />
             <button onClick={applyPromo}
               style={{ background:promoValid ? '#4ADE8020' : C.surface, border:`1px solid ${promoValid ? '#4ADE80' : C.border}`, borderRadius:8, padding:'8px 14px', color:promoValid ? '#4ADE80' : C.text2, fontSize:13, cursor:'pointer' }}>
-              {promoValid ? '✓ Applied' : 'Apply'}
+              {promoValid ? 'âœ“ Applied' : 'Apply'}
             </button>
             {promoMsg && <span style={{ color:promoValid ? '#4ADE80' : '#F87171', fontSize:12 }}>{promoMsg}</span>}
           </div>
@@ -214,7 +191,7 @@ export default function LandingPage() {
           {STATIC_PLANS.map(plan => {
             const isPopular = plan.code === 'professional'
             const isEnt = plan.code === 'enterprise'
-            const price = getPrice(plan.code, plan)
+            const price = getPrice(plan)
             return (
               <div key={plan.code} style={{ background:isPopular ? 'rgba(14,165,160,0.08)' : C.surface, border:`2px solid ${isPopular ? C.teal : C.border}`, borderRadius:14, padding:28, position:'relative' }}>
                 {isPopular && <div style={{ position:'absolute', top:-13, left:'50%', transform:'translateX(-50%)', background:C.teal, color:'white', fontSize:11, fontWeight:700, padding:'4px 16px', borderRadius:20, whiteSpace:'nowrap' }}>MOST POPULAR</div>}
@@ -230,24 +207,24 @@ export default function LandingPage() {
                       <span style={{ color:C.text1, fontSize:40, fontWeight:700, lineHeight:1 }}>{sym}{price}</span>
                       <span style={{ color:C.text3, fontSize:14 }}>/{interval === 'year' ? 'yr' : 'mo'}</span>
                     </div>
-                    {interval === 'year' && <div style={{ color:'#4ADE80', fontSize:12, marginBottom:4 }}>{sym}{Math.round(price/12*10)/10}/mo equivalent · Save {annualPct}%</div>}
-                    {promoValid && <div style={{ color:'#F59E0B', fontSize:12, marginBottom:4 }}>🎟 Promo applied</div>}
+                    {interval === 'year' && <div style={{ color:'#4ADE80', fontSize:12, marginBottom:4 }}>{sym}{plan.prices[currency as keyof typeof plan.prices]?.month ?? 0}/mo equivalent Â· Save 20%</div>}
+                    {promoValid && <div style={{ color:'#F59E0B', fontSize:12, marginBottom:4 }}>ðŸŽŸ Promo applied</div>}
                   </>
                 )}
 
-                <div style={{ color:C.text3, fontSize:12, marginBottom:24 }}>Up to {plan.users} users · {plan.batches}</div>
+                <div style={{ color:C.text3, fontSize:12, marginBottom:24 }}>Up to {plan.users} users Â· {plan.batches}</div>
 
                 <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:24 }}>
                   {plan.features.map(f => (
                     <div key={f} style={{ display:'flex', gap:8, fontSize:13, color:C.text2 }}>
-                      <span style={{ color:C.tealL, flexShrink:0 }}>✓</span>{f}
+                      <span style={{ color:C.tealL, flexShrink:0 }}>âœ“</span>{f}
                     </div>
                   ))}
                 </div>
 
                 <button onClick={() => handleCheckout(plan.code)} disabled={checkingOut === plan.code}
                   style={{ width:'100%', background:isPopular ? C.teal : '#172035', border:`1px solid ${isPopular ? 'transparent' : C.border}`, borderRadius:9, padding:'13px', color:checkingOut===plan.code ? C.text3 : 'white', fontSize:14, fontWeight:600, cursor:checkingOut===plan.code ? 'not-allowed' : 'pointer' }}>
-                  {checkingOut === plan.code ? 'Loading...' : isEnt ? 'Contact sales →' : 'Start free trial →'}
+                  {checkingOut === plan.code ? 'Loading...' : isEnt ? 'Contact sales â†’' : 'Start free trial â†’'}
                 </button>
               </div>
             )
@@ -260,10 +237,10 @@ export default function LandingPage() {
         <h2 style={{ textAlign:'center', color:C.text1, fontSize:32, fontWeight:300, margin:'0 0 40px' }}>Frequently asked questions</h2>
         {[
           { q:"What happens after my trial ends?", a:"You'll be prompted to choose a plan. Your data is preserved. If you don't subscribe within 30 days, your account is suspended (not deleted)." },
-          { q:"Can I change plans?", a:"Yes — upgrade or downgrade anytime. Upgrades take effect immediately, downgrades at next billing cycle via the Stripe billing portal." },
-          { q:"Do you offer annual billing?", a:"Yes — save 20% paying annually. Switch between monthly and annual anytime via your billing portal." },
+          { q:"Can I change plans?", a:"Yes â€” upgrade or downgrade anytime. Upgrades take effect immediately, downgrades at next billing cycle via the Stripe billing portal." },
+          { q:"Do you offer annual billing?", a:"Yes â€” save 20% paying annually. Switch between monthly and annual anytime via your billing portal." },
           { q:"What ERP systems do you support?", a:"SAP (FIDCC2 IDOC), Oracle AR (AutoLockbox), NetSuite, Xero, and generic CSV/JSON. Custom connectors on Enterprise." },
-          { q:"Is my financial data secure?", a:"Yes. AES-256 encryption at rest, TLS 1.3 in transit, full org isolation, SHA-256 tamper-evident audit chain. Global deployment via Vercel edge network." },
+          { q:"Is my financial data secure?", a:"Yes. AES-256 encryption at rest, TLS 1.3 in transit, full org isolation, SHA-256 tamper-evident audit chain. Australian data residency (Vercel syd1)." },
           { q:"What bank file formats do you support?", a:"MT940, CAMT.053 (ISO 20022), BAI2, and custom CSV with a mapping profile builder." },
         ].map(faq => (
           <details key={faq.q} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, marginBottom:8, overflow:'hidden' }}>
@@ -279,10 +256,10 @@ export default function LandingPage() {
           <h2 style={{ color:C.text1, fontSize:36, fontWeight:300, margin:'0 0 16px' }}>Start automating your cash application today</h2>
           <p style={{ color:C.text3, fontSize:16, marginBottom:36 }}>Trusted by accounts receivable teams worldwide.</p>
           <div style={{ display:'flex', gap:14, justifyContent:'center' }}>
-            <a href="/signup" style={{ background:C.teal, color:'white', textDecoration:'none', padding:'14px 36px', borderRadius:10, fontSize:16, fontWeight:700 }}>Start free trial →</a>
+            <a href="/signup" style={{ background:C.teal, color:'white', textDecoration:'none', padding:'14px 36px', borderRadius:10, fontSize:16, fontWeight:700 }}>Start free trial â†’</a>
             <a href="mailto:sales@hindleconsultants.com.au" style={{ background:'transparent', color:C.text2, textDecoration:'none', padding:'14px 32px', borderRadius:10, fontSize:16, border:`1px solid ${C.border}` }}>Talk to sales</a>
           </div>
-          <div style={{ color:C.text3, fontSize:13, marginTop:20 }}>14-day free trial · No credit card · Cancel anytime</div>
+          <div style={{ color:C.text3, fontSize:13, marginTop:20 }}>14-day free trial Â· No credit card Â· Cancel anytime</div>
         </div>
       </section>
 
@@ -290,17 +267,18 @@ export default function LandingPage() {
       <footer style={{ borderTop:`1px solid ${C.border}`, padding:'32px 40px' }}>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <span>⬡</span><span style={{ color:C.text1, fontWeight:700 }}>CashFlow AI</span>
-            <span style={{ color:C.text3, fontSize:13 }}>by Hindle Consultants · Kuhlekt</span>
+            <span>â¬¡</span><span style={{ color:C.text1, fontWeight:700 }}>CashFlow AI</span>
+            <span style={{ color:C.text3, fontSize:13 }}>by Hindle Consultants Â· Kuhlekt</span>
           </div>
           <div style={{ display:'flex', gap:20 }}>
             {[['#pricing','Pricing'],['#faq','FAQ'],['/login','Sign in'],['/signup','Sign up'],['/admin','Admin']].map(([href,label]) => (
               <a key={href} href={href} style={{ color:C.text3, fontSize:13, textDecoration:'none' }}>{label}</a>
             ))}
           </div>
-          <span style={{ color:C.text3, fontSize:12 }}>© 2026 Hindle Consultants Pty Ltd</span>
+          <span style={{ color:C.text3, fontSize:12 }}>Â© 2026 Hindle Consultants Pty Ltd</span>
         </div>
       </footer>
     </div>
   )
 }
+
