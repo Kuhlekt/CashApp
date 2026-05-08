@@ -199,9 +199,9 @@ export default function LandingPage() {
                 )}
 
                 <div style={{ color:C.text3, fontSize:12, marginBottom:20, minHeight:18 }}>
-                  {limits.users !== null
-                    ? limits.users + ' user' + (limits.users === 1 ? '' : 's') + ' &middot; ' + (limits.batches !== null && limits.batches >= 999999 ? 'Unlimited' : (limits.batches ?? '')) + ' runs/mo'
-                    : livePlans.length === 0 ? 'Loading...' : ''}
+                  {limits.users !== null ? (
+                    <span>{limits.users} user{limits.users === 1 ? '' : 's'} &middot; {limits.batches !== null && limits.batches >= 999999 ? 'Unlimited' : limits.batches} runs/mo</span>
+                  ) : livePlans.length === 0 ? 'Loading...' : ''}
                 </div>
 
                 <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:24 }}>
